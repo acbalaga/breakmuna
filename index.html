@@ -8,8 +8,17 @@
 </head>
 <body>
 <main class="pantry">
-  <div class="room" id="room">
+  <div class="door" id="door">
+    <img class="room-art" src="assets/sprites/door.png" width="90" height="130" alt="The pantry door.">
+    <img class="sign" id="sign" src="assets/sprites/sign.png" width="29" height="17" alt="Closed" hidden>
+    <button type="button" class="door-btn" id="door-btn" aria-label="Pantry door. Tap to start a five minute break."></button>
+    <button type="button" class="ctl last-receipt" id="last-receipt" hidden>Last receipt</button>
+  </div>
+
+  <div class="room" id="room" hidden>
     <img class="room-art" src="assets/sprites/room.png" width="90" height="130" alt="A small office pantry drawn in pixel art.">
+
+    <canvas class="hands" id="hands" width="17" height="17" aria-hidden="true"></canvas>
 
     <!-- Stations. Positions are percentages of the 90 by 130 art grid. -->
     <button type="button" class="spot station" data-spot="coffee" data-cursor="spoon" aria-label="Coffee corner"
@@ -32,9 +41,25 @@
       style="left:2.2%;top:10%;width:24.4%;height:13.8%"></button>
     <button type="button" class="spot detail" data-spot="clock" aria-label="Wall clock"
       style="left:74.4%;top:5.4%;width:20%;height:13.8%"></button>
+
+    <div class="lights" aria-hidden="true"></div>
+    <div class="countdown" id="countdown" role="timer" aria-label="Break time remaining" hidden></div>
+    <button type="button" class="ctl exit" id="exit">Balik na ako</button>
   </div>
 
   <div class="dialog" id="dialog" role="status" aria-live="polite" hidden></div>
 </main>
+
+<div class="receipt" id="receipt" role="dialog" aria-modal="true" aria-label="Break receipt" hidden>
+  <div class="slip">
+    <pre id="receipt-text"></pre>
+    <button type="button" class="ctl" id="receipt-close">Close</button>
+  </div>
+</div>
+
+<script src="data/copy.js"></script>
+<script src="js/conditions.js"></script>
+<script src="js/receipt.js"></script>
+<script src="js/break.js"></script>
 </body>
 </html>

@@ -63,8 +63,12 @@ def write_png(path, grid, scale=1):
 
 
 # ---------------------------------------------------------------- room
-W, H = 90, 130
-g = [[1] * W for _ in range(H)]
+W, H, g = 0, 0, []
+
+
+def canvas(w, h, fill):
+    global W, H, g
+    W, H, g = w, h, [[fill] * w for _ in range(h)]
 
 
 def R(x0, y0, x1, y1, c):
@@ -82,7 +86,62 @@ def box(x0, y0, x1, y1, fill, line=0):
     R(x0 + 1, y0 + 1, x1 - 1, y1 - 1, fill)
 
 
+# 3x5 sign font (M and N are wider). Only the letters the art needs.
+FONT = {
+    "A": ["010", "101", "111", "101", "101"], "B": ["110", "101", "110", "101", "110"],
+    "C": ["011", "100", "100", "100", "011"], "D": ["110", "101", "101", "101", "110"],
+    "E": ["111", "100", "110", "100", "111"], "K": ["101", "101", "110", "101", "101"],
+    "L": ["100", "100", "100", "100", "111"], "O": ["111", "101", "101", "101", "111"],
+    "P": ["110", "101", "110", "100", "100"], "R": ["110", "101", "110", "101", "101"],
+    "S": ["011", "100", "010", "001", "110"], "T": ["111", "010", "010", "010", "010"],
+    "U": ["101", "101", "101", "101", "111"], "Y": ["101", "101", "010", "010", "010"],
+    "M": ["10001", "11011", "10101", "10001", "10001"], "N": ["1001", "1101", "1011", "1001", "1001"],
+    " ": ["00", "00", "00", "00", "00"],
+}
+
+
+def text(x, y, s, c, k=1):
+    for ch in s:
+        gl = FONT[ch]
+        for j, row in enumerate(gl):
+            for i, bit in enumerate(row):
+                if bit == "1":
+                    R(x + i * k, y + j * k, x + i * k + k - 1, y + j * k + k - 1, c)
+        x += (len(gl[0]) + 1) * k
+
+
+def door():
+    canvas(90, 130, 1)
+    R(0, 0, 89, 1, 2)
+    R(0, 96, 89, 99, 5)
+    for y in range(100, H):
+        for x in range(W):
+            g[y][x] = 3 if ((x // 8) + ((y - 100) // 8)) % 2 == 0 else 4
+    R(0, 100, 89, 100, 0)
+    text(4, 6, "BREAK MUNA", 0, 2)
+    box(23, 22, 66, 100, 5)
+    box(26, 25, 63, 100, 6)
+    box(32, 31, 57, 55, 17)
+    for i in range(6):
+        P(36 + i, 42 - i, 8); P(44 + i, 50 - i, 8)
+    box(30, 60, 59, 68, 8)
+    text(33, 62, "PANTRY", 0)
+    box(57, 71, 61, 75, 17)
+    box(31, 78, 58, 95, 7, 5)
+
+
+def sign():
+    canvas(29, 17, CLEAR)
+    P(14, 0, 0)
+    for i in range(6):
+        P(13 - i * 2, 1 + i, 0); P(12 - i * 2, 1 + i, 0)
+        P(15 + i * 2, 1 + i, 0); P(16 + i * 2, 1 + i, 0)
+    box(0, 7, 28, 16, 8)
+    text(3, 10, "CLOSED", 15)
+
+
 def room():
+    canvas(90, 130, 1)
     # wall and floor
     R(0, 0, 89, 1, 2)
     R(0, 70, 89, 73, 5)
@@ -122,7 +181,7 @@ def room():
     R(45, 9, 46, 33, 8)
     box(30, 35, 61, 37, 9)
 
-    # wall clock (hands are static here, the break engine draws the real ones)
+    # wall clock (face only, js/break.js draws the hands)
     cx, cy = 76, 16
     for y in range(cy - 8, cy + 9):
         for x in range(cx - 8, cx + 9):
@@ -131,8 +190,6 @@ def room():
                 P(x, y, 0 if d > 38 else 8)
     for x, y in [(76, 10), (82, 16), (76, 22), (70, 16)]:
         P(x, y, 11)
-    R(76, 11, 76, 16, 0)
-    R(77, 16, 79, 16, 15)
 
     # counter
     R(0, 50, 63, 50, 8); R(0, 51, 63, 52, 9); R(0, 53, 63, 53, 0)
@@ -306,6 +363,11 @@ if __name__ == "__main__":
     for name, art in CURSORS.items():
         write_png(os.path.join(ROOT, f"assets/cursors/{name}.png"), cursor_grid(art), scale=2)
     preview = os.environ.get("PREVIEW_DIR")
+    door()
+    write_png(os.path.join(ROOT, "assets/sprites/door.png"), g)
+    sign()
+    write_png(os.path.join(ROOT, "assets/sprites/sign.png"), g)
+    room()
     if preview:
         write_png(os.path.join(preview, "room_x6.png"), g, scale=6)
         for name, art in CURSORS.items():

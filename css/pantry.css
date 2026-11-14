@@ -27,7 +27,7 @@ body {
   cursor: url("../assets/cursors/mug.png") 2 6, default;
 }
 
-.room {
+.room, .door {
   position: relative;
   width: 100%;
   aspect-ratio: 90 / 130;
@@ -64,6 +64,118 @@ body {
 .spot[data-cursor="finger"] { cursor: url("../assets/cursors/finger.png") 9 0, pointer; }
 .spot[data-cursor="eyes"]   { cursor: url("../assets/cursors/eyes.png") 16 12, pointer; }
 
+[hidden] { display: none !important; }
+
+/* Door: landing and cooldown. */
+.sign {
+  position: absolute;
+  left: 34.4%;
+  top: 26.2%;
+  width: 32.2%;
+  height: auto;
+  image-rendering: pixelated;
+}
+.door-btn {
+  position: absolute;
+  left: 28.9%;
+  top: 19.2%;
+  width: 42.2%;
+  height: 57.7%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.door-btn:focus-visible { outline: 2px dashed var(--ink); outline-offset: 2px; }
+body[data-view="cooldown"] .door .room-art { filter: brightness(0.72); }
+
+/* Wall clock hands, drawn on the art grid. */
+.hands {
+  position: absolute;
+  left: 75.56%;
+  top: 6.15%;
+  width: 18.89%;
+  height: auto;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+/* Lights: one flicker at 4:30, off at 5:00. */
+.lights {
+  position: absolute;
+  inset: 0;
+  background: #0d0a14;
+  opacity: 0;
+  pointer-events: none;
+}
+.room.flicker .lights { animation: flicker 0.5s steps(1) 1; }
+.room.lights-off .lights { opacity: 0.78; }
+@keyframes flicker {
+  0%, 30% { opacity: 0.5; }
+  15%, 45%, 100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .room.flicker .lights { animation: none; }
+}
+
+.countdown {
+  position: absolute;
+  left: 74.4%;
+  top: 19.6%;
+  width: 20%;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.2;
+  color: var(--paper);
+  background: var(--ink);
+}
+
+/* Controls keep the system cursor so they stay obvious. */
+.ctl {
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 12px;
+  min-height: 40px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  cursor: pointer;
+}
+.ctl:focus-visible { outline: 2px solid #4a8fd0; outline-offset: 2px; }
+.ctl:disabled { opacity: 0.5; cursor: default; }
+.exit, .last-receipt { position: absolute; left: 8px; bottom: 8px; }
+
+/* Receipt slip. Crisp, not pixel art. */
+.receipt {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(13, 10, 20, 0.7);
+  cursor: default;
+}
+.slip {
+  width: 100%;
+  max-width: 300px;
+  padding: 20px 18px 16px;
+  background: #fbfaf6;
+  color: #1f1a24;
+  text-align: center;
+}
+.slip pre {
+  margin: 0 0 16px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
+  white-space: pre-wrap;
+}
+
 /* RPG dialog box under the room. */
 .dialog {
   min-height: var(--dialog-h);
@@ -73,6 +185,6 @@ body {
   box-shadow: inset 0 0 0 2px #8c8c94;
   font-size: 15px;
   line-height: 1.4;
+  white-space: pre-line;
   cursor: default;
 }
-.dialog[hidden] { display: none; }

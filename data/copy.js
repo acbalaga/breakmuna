@@ -38,6 +38,9 @@ window.PANTRY_COPY = [
   { id: "cond-04", pool: "condition", when: ["overtime"], text: "Half the lights are off. The aircon left at 6:00 and was not consulted." },
   { id: "cond-05", pool: "condition", when: ["ber_months"], text: "Christmas party update: the theme is still under discussion. So is the exchange gift." },
 
+  // Landing line (open door). Not in the approved 30, review before launch.
+  { id: "landing-01", pool: "landing", text: "Pantry open. Break limit: 5 minutes. Tap the door." },
+
   // Closed-door lines
   { id: "door-01", pool: "door", text: "Pantry closed. You were just here." },
   { id: "door-02", pool: "door", text: "Closed for 30 minutes. Your desk is where you left it." },

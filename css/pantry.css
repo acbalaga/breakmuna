@@ -278,31 +278,54 @@ body[data-view="cooldown"] .sign { animation: sway 1.2s steps(1) 1; transform-or
   border: 4px solid var(--ink);
 }
 
-/* ref */
-.shelves {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0 8px;
-  padding: 0 8px;
+/* ref: pixel sprites on two shelves, cold air drifting down */
+.ref-inside {
+  position: relative;
+  padding: 6px 4px 0;
   background: var(--paper);
   border: 4px solid var(--ink);
+  border-top: 10px solid #f0cc5a;      /* the ref light */
+  overflow: hidden;
+}
+.shelf {
+  display: flex;
+  justify-content: space-around;
+  border-bottom: 8px solid #8c8c94;
+  margin-bottom: 6px;
 }
 .baon {
-  height: 44px;
-  margin: 22px 0 0;
+  width: 64px;
+  height: 64px;
+  margin: 0;
   padding: 0;
-  background: var(--paper);
-  border: 4px solid var(--ink);
-  border-top-width: 12px;
-  box-shadow: 0 4px 0 #8c8c94, -12px 4px 0 #8c8c94, 12px 4px 0 #8c8c94;
+  border: 0;
+  background: url("../assets/sprites/ref_items.png") 0 calc(var(--row) * -64px) / 128px 512px no-repeat;
+  image-rendering: pixelated;
 }
-.baon.c1 { border-top-color: #4a8fd0; }
-.baon.c2 { border-top-color: #c8483c; }
-.baon.c3 { border-top-color: #5a9a52; }
-.baon.c4 { border-top-color: #e08a3c; height: 30px; margin-top: 36px; }
-.baon.seen { background: #f0cc5a; }
-.baon:focus-visible, .note:focus-visible { outline: 2px dashed var(--ink); outline-offset: 2px; }
-.shelves::after { content: ""; grid-column: 1 / -1; height: 10px; }
+.baon.open { background-position-x: -64px; animation: hop 0.4s steps(1) 1; }
+.baon.gone { visibility: hidden; }
+.baon.glint { animation: glint 0.8s steps(1) infinite; }
+@keyframes hop { 0% { transform: translateY(-8px); } 50% { transform: translateY(-4px); } 100% { transform: none; } }
+@keyframes glint { 50% { outline: 4px solid #f0cc5a; outline-offset: -2px; } }
+.mist {
+  position: absolute;
+  top: 0;
+  width: 12px;
+  height: 4px;
+  background: #c8c8c8;
+  opacity: 0.8;
+  pointer-events: none;
+  animation: mist 2.4s steps(6) infinite;
+}
+.mist.m0 { left: 14%; }
+.mist.m1 { left: 52%; animation-delay: -0.8s; }
+.mist.m2 { left: 83%; animation-delay: -1.6s; }
+@keyframes mist { from { transform: translate(0, 0); } to { transform: translate(8px, 150px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .baon.open, .baon.glint, .mist { animation: none; }
+  .baon.glint { outline: 4px solid #f0cc5a; outline-offset: -2px; }
+  .mist { display: none; }
+}
 
 /* bulletin board */
 .board {
@@ -338,6 +361,13 @@ body[data-view="cooldown"] .sign { animation: sway 1.2s steps(1) 1; transform-or
 .note.under { transform: translate(4px, 4px); }
 .note.n1 { background-color: #f0cc5a; }
 .note.n2 { background-color: #e08a3c; }
+.note.scrap {
+  inset: 34px 10px 6px 14px;
+  border: 0;
+  background:
+    repeating-linear-gradient(#0000 0 7px, #6b4a32 7px 9px) 6px 6px / calc(100% - 14px) 30px no-repeat,
+    #f0cc5a;
+}
 
 /* microwave */
 .mw { display: flex; gap: 10px; align-items: stretch; padding: 10px; background: var(--paper); border: 4px solid var(--ink); }
@@ -357,6 +387,30 @@ body[data-view="cooldown"] .sign { animation: sway 1.2s steps(1) 1; transform-or
   height: 8px;
   background: var(--ink);
   box-shadow: 0 -8px 0 -0px #6b4a32 inset, 8px -8px 0 0 #6b4a32, 24px -8px 0 0 #6b4a32;
+}
+.mw-items { display: flex; gap: 6px; justify-content: center; margin-bottom: 8px; }
+.mw-items .ctl { min-height: 40px; padding: 4px 8px; font-size: 13px; }
+.mw-items .ctl[aria-pressed="true"] { background: #f0cc5a; }
+.mw-food { position: absolute; left: 50%; bottom: 22px; }
+.mw-food.bread {
+  width: 44px; height: 24px; margin-left: -22px;
+  background: #b98a5a;
+  border: 4px solid var(--ink);
+  border-top-color: #6b4a32;
+  box-shadow: inset 0 4px 0 #c49a62;
+}
+.mw-food.merienda {
+  width: 14px; height: 14px; margin-left: -7px;
+  background: #e08a3c;
+  outline: 3px solid var(--ink);
+  box-shadow: -24px 0 0 #e08a3c, -24px 0 0 3px var(--ink), 24px 0 0 #e08a3c, 24px 0 0 3px var(--ink);
+}
+.mw-food.october {
+  width: 52px; height: 26px; margin-left: -26px;
+  background: var(--paper);
+  border: 4px solid var(--ink);
+  border-top: 10px solid #5a9a52;
+  box-shadow: inset 16px 0 0 -4px #f0cc5a;
 }
 .mw-window.running { background: #e08a3c; animation: mw-glow 0.5s steps(1) infinite; }
 .mw-window.running .mw-plate { animation: mw-turn 1s steps(1) infinite; }

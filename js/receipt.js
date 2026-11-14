@@ -66,6 +66,7 @@
     var out = ["BREAK MUNA", "Official Break Receipt", rule]
       .concat(d.head.map(row), [rule], d.items.map(row), [rule]);
     if (d.closing) out.push(d.closing, rule);
+    if ((r.counts || {}).solved) out.push("Stamped: CASE CLOSED. The October baon.", rule);
     out.push(d.reopen);
     if (d.url) out.push(d.url);
     return out.join("\n");
@@ -154,6 +155,22 @@
 
     text(d.reopen, cx, y += 62, 34, { align: "center", bold: true });
     if (d.url) text(d.url, cx, y += 46, 26, { align: "center", color: soft });
+
+    if ((r.counts || {}).solved) {
+      // stamp for the hidden case, in place of the barcode
+      ctx.save();
+      ctx.translate(cx, bottom - 100);
+      ctx.rotate(-0.07);
+      ctx.strokeStyle = "#c8483c";
+      ctx.lineWidth = 6;
+      ctx.strokeRect(-250, -52, 500, 104);
+      ctx.lineWidth = 2;
+      ctx.strokeRect(-240, -42, 480, 84);
+      text("CASE CLOSED", 0, 0, 46, { align: "center", bold: true, color: "#c8483c" });
+      text("THE OCTOBER BAON", 0, 32, 22, { align: "center", color: "#c8483c" });
+      ctx.restore();
+      return;
+    }
 
     // barcode, decorative, derived from the break start time
     var seed = Math.floor(r.start / 1000) || 1, bx = L + PAD + 60, by = bottom - 110;

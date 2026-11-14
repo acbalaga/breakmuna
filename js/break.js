@@ -84,7 +84,11 @@
     el.lastReceipt.hidden = true;
     el.doorBtn.disabled = false;
     el.doorBtn.setAttribute("aria-label", "Pantry door. Tap to start a five minute break.");
-    say(pick("landing"));
+    // a line written for today wins over the default
+    var lines = P.lines(function (x) { return x.pool === "landing"; });
+    var timely = lines.filter(function (x) { return x.when; });
+    var l = (timely.length ? timely : lines)[0];
+    say(l ? l.text : "");
   }
 
   function showCooldown(reopen) {

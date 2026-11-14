@@ -7,7 +7,8 @@
   var C = {
     ink: "#1f1a24", white: "#f4f0e6", grey: "#c8c8c8", brown: "#6b4a32",
     red: "#c8483c", orange: "#e08a3c", yellow: "#f0cc5a", wood: "#b98a5a",
-    blue: "#4a8fd0", dark: "#55555e", steel: "#8c8c94", sky: "#8cc4e8", wall: "#e8dcc0", green: "#5a9a52"
+    blue: "#4a8fd0", dark: "#55555e", steel: "#8c8c94", sky: "#8cc4e8", green: "#5a9a52",
+    navy: "#2c4f8a", slate: "#6a7a94", shade: "#8c7c60"
   };
   var COUNTS_KEY = "pantry.counts";
   var SOUND_KEY = "pantry.sound";
@@ -22,14 +23,14 @@
   var coverUp = false;
   var coverDy = 0;            // food cover offset, steps toward 0 or -13
   var shake = 0;              // frames left of the sachet being emptied
-  var mwave = 0;              // frames left of the microwave running
   var spark = null;           // { x, y, n } tap flash on a background object
   var mini = null;            // which mini panel is open: aircon, ref, bulletin, microwave
   var ac = { temp: 18, idle: 0 };
   var mw = { set: 0, secs: 0, endAt: 0, queue: 0, queueAt: 0, item: "bread" };
+  // progress on the two hidden cases, see the secret pool in data/copy.js
   var secret = { code: false, taken: false, slip: false, ring: false, key: false };
   var cab = [false, false, false, false];   // which cabinets are open
-  var catAwake = 0;                         // frames the cat stays awake after a tap   // the hidden case, see the secret pool in data/copy.js
+  var catAwake = 0;                         // frames the cat stays awake after a tap
   var watch = null;           // { start, base } while at the window
   var litWindows = 0;
   var parcelOpen = false;
@@ -82,8 +83,10 @@
     room.classList.toggle("subdued", has("monday_morning") || has("weekend"));
     room.classList.toggle("half-lit", has("overtime"));
     var d = new Date(P.now()), mins = d.getHours() * 60 + d.getMinutes();
+    // the sky is orange for the hour before overtime, and again for the hour after it
     cond = { lunch: has("lunch_rush"), merienda: has("merienda_hour"), night: has("overtime"), parol: has("ber_months"),
-             dusk: mins >= 17 * 60 && mins < 18 * 60 + 30 };
+             dusk: (mins >= 17 * 60 && mins < 18 * 60 + 30) || (mins >= 5 * 60 && mins < 6 * 60),
+             rain: P.rainy() };
     stirsNeeded = has("monday_morning") ? 5 : STIRS;
   }
 
@@ -114,6 +117,14 @@
 
   function px(x, y, c) { ctx.fillStyle = c; ctx.fillRect(x, y, 1, 1); }
   function rect(x0, y0, x1, y1, c) { ctx.fillStyle = c; ctx.fillRect(x0, y0, x1 - x0 + 1, y1 - y0 + 1); }
+
+  // Draws rows of one-letter pixels. A dot is clear.
+  var INK = { k: C.ink, o: C.orange, b: C.brown, w: C.white, r: C.red, g: C.green, y: C.yellow };
+  function sprite(x, y, rows) {
+    rows.forEach(function (row, j) {
+      for (var i = 0; i < row.length; i++) if (INK[row[i]]) px(x + i, y + j, INK[row[i]]);
+    });
+  }
 
   function drawCover(dy) {
     var rows = [[88, 88, 16, 36], [85, 87, 17, 35], [83, 84, 19, 33], [82, 82, 22, 30]];
@@ -177,15 +188,26 @@
     }
   }
 
+  // The view: four towers standing on EDSA, and the windows that are lit in the base art.
+  var TOWERS = [[33, 22, 38], [39, 18, 44], [47, 24, 51], [52, 16, 58]];
+  var LIT = [[34, 24], [36, 26], [40, 20], [42, 23], [41, 27], [48, 26], [50, 28], [53, 18], [56, 20], [54, 23], [57, 26]];
+  var LATE = [[37, 23], [43, 19], [40, 25], [49, 25], [57, 17], [53, 21], [55, 28]];
+  // Windows that come on, one by one, while the visitor stays at the window.
   var LIGHTS = [[35, 23], [37, 28], [41, 19], [43, 25], [40, 29], [49, 25], [50, 29], [54, 17], [57, 22], [53, 27], [56, 29], [34, 28]];
+  var STARS = [[34, 10], [42, 11], [48, 13], [38, 16], [57, 11], [49, 20], [36, 19]];
+
+  function skyline(a, b) {
+    TOWERS.forEach(function (t, i) { rect(t[0], t[1], t[2], 30, i % 2 ? b : a); });
+  }
 
   function drawNight() {
-    rect(33, 9, 58, 30, "#2c4f8a");
-    [[33, 22, 38, 30], [39, 18, 44, 30], [47, 24, 51, 30], [52, 16, 58, 30]].forEach(function (b) {
-      rect(b[0], b[1], b[2], b[3], C.ink);
+    rect(33, 9, 58, 30, C.navy);
+    STARS.forEach(function (p, i) {
+      if (still || (i * 5 + (frame >> 2)) % 9) px(p[0], p[1], C.white);
     });
-    [[34, 24], [36, 26], [37, 23], [40, 20], [42, 23], [41, 27], [43, 19], [40, 25], [48, 26], [50, 28],
-     [49, 25], [53, 18], [56, 20], [54, 23], [57, 26], [55, 28], [57, 17], [53, 21]].forEach(function (w, i) {
+    rect(35, 11, 37, 13, C.white); px(37, 11, C.navy); px(37, 12, C.navy);   // crescent moon
+    skyline(C.ink, C.ink);
+    LIT.concat(LATE).forEach(function (w, i) {
       if (still || (i + (frame >> 3)) % 7) px(w[0], w[1], C.yellow);
     });
     // night traffic: tail lights one way, headlights the other, barely moving
@@ -195,17 +217,97 @@
       if ((x + shift) % 3 === 0) px(x, 31, C.red);
       if ((x + 3 - shift) % 4 === 0) px(x, 33, C.white);
     }
-    rect(45, 9, 46, 33, C.white);
   }
 
-  function drawParol() {
-    px(52, 9, C.ink);
-    [[52, 10, C.red], [51, 11, C.red], [52, 11, C.yellow], [53, 11, C.red],
-     [50, 12, C.red], [51, 12, C.yellow], [52, 12, C.white], [53, 12, C.yellow], [54, 12, C.red],
-     [51, 13, C.red], [52, 13, C.yellow], [53, 13, C.red], [52, 14, C.red],
-     [51, 15, C.yellow], [53, 15, C.yellow], [51, 16, C.yellow], [53, 16, C.yellow]].forEach(function (p) {
-      px(p[0], p[1], p[2]);
+  // Dawn and dusk: the sky goes orange and the towers go dark.
+  function drawDusk() {
+    rect(33, 9, 58, 14, C.orange); rect(33, 15, 58, 19, C.yellow); rect(33, 20, 58, 30, C.white);
+    rect(49, 17, 50, 18, C.white);   // low sun
+    skyline(C.slate, C.navy);
+    LIT.forEach(function (w, i) { if (i % 3 !== 1) px(w[0], w[1], C.yellow); });
+  }
+
+  // A rainy day: grey sky, heavier clouds.
+  function drawOvercast() {
+    rect(33, 9, 58, 30, C.grey);
+    skyline(C.slate, C.navy);
+    LIT.forEach(function (w) { px(w[0], w[1], C.yellow); });
+  }
+
+  // Clouds drift across both panes. Lighter on top, shaded underneath.
+  function drawClouds(top, under) {
+    var drift = still ? 0 : (frame >> 3) % 26;
+    [[35, 11, 5], [50, 12, 6]].forEach(function (c) {
+      for (var i = 0; i < c[2]; i++) {
+        var x = 33 + (c[0] - 33 + i + drift) % 26;
+        if (i > 0 && i < c[2] - 1) px(x, c[1] - 1, top);
+        px(x, c[1], top); px(x, c[1] + 1, under);
+      }
     });
+  }
+
+  // A stalled EDSA: cars creep one pixel at a time, brake lights blinking.
+  function drawTraffic() {
+    rect(33, 31, 58, 33, C.dark);
+    var creep = still ? 0 : Math.floor(frame / 10) % 26;
+    [[35, C.red], [38, C.white], [41, C.red], [44, C.yellow], [48, C.yellow], [51, C.red], [55, C.white]].forEach(function (c, i) {
+      var braking = !still && c[1] === C.red && (frame + i * 3) % 8 < 2;
+      px(33 + (c[0] - 33 + creep) % 26, 32, braking ? C.ink : c[1]);
+    });
+  }
+
+  // Now and then a bird crosses the sky, two wing beats per pixel of progress.
+  function drawBird() {
+    var t = frame % 120;
+    if (still || t >= 26) return;
+    var x = 33 + t, y = 14 + [0, 0, 1, 1][t % 4];
+    px(x, y, C.ink);
+    if (x > 33) px(x - 1, y - (t % 2), C.ink);
+    if (x < 58) px(x + 1, y - (t % 2), C.ink);
+  }
+
+  var PAROL = ["..k..", "..r..", ".ryr.", "rywyr", ".ryr.", "..r..", ".y.y.", ".y.y."];
+
+  // A small plant on the windowsill. It leans a little, now and then.
+  function drawPlant() {
+    var lean = still ? 0 : [0, 0, 0, 1, 0, 0, 0, -1][(frame >> 2) % 8];
+    rect(55, 32, 58, 33, C.ink); rect(56, 32, 57, 33, C.red);
+    px(56, 31, C.green); px(57, 31, C.green);
+    px(56 + lean, 30, C.green); px(57 + lean, 29, C.green); px(55 + lean, 29, C.green);
+    px(56 + lean, 28, C.green);
+  }
+
+  function drawWindow() {
+    if (cond.night) drawNight();
+    else {
+      if (cond.dusk) drawDusk();
+      else if (cond.rain) { drawOvercast(); drawClouds(C.steel, C.dark); }
+      else {
+        rect(35, 11, 39, 12, C.sky); rect(50, 12, 55, 13, C.sky);   // the clouds in the base art
+        drawClouds(C.white, C.grey);
+        drawBird();
+      }
+      drawTraffic();
+    }
+    for (var i = 0; i < Math.min(litWindows, LIGHTS.length); i++) px(LIGHTS[i][0], LIGHTS[i][1], C.yellow);
+    rect(45, 9, 46, 33, C.white);   // mullion, over everything behind the glass
+    drawPlant();
+    if (cond.parol) {
+      sprite(50, 9, PAROL);
+      if (!still && frame % 6 < 3) px(52, 12, C.yellow);
+    }
+    if (cond.rain) {
+      // rain falls: short streaks sliding down every third column
+      var f = still ? 0 : frame;
+      for (var x = 33; x <= 58; x += 3) {
+        if (x === 45) continue;
+        for (var k = 0; k < 2; k++) {
+          var y = 9 + (x * 13 + k * 11 + f * 3) % 22;
+          px(x, y, cond.night ? C.steel : C.white);
+          if (y < 30) px(x, y + 1, cond.night ? C.grey : C.steel);
+        }
+      }
+    }
   }
 
   // Lunch rush: baon containers waiting on top of the microwave.
@@ -226,70 +328,6 @@
       px(p[0] - 1, p[1], C.yellow); px(p[0] + 1, p[1], C.yellow);
       px(p[0], p[1] - 1, C.yellow); px(p[0], p[1] + 1, C.yellow);
     });
-  }
-
-  // The hour before overtime: the sky goes orange and the towers go dark blue.
-  function drawDusk() {
-    rect(33, 9, 58, 14, C.orange); rect(33, 15, 58, 19, C.yellow); rect(33, 20, 58, 30, C.white);
-    px(49, 17, C.white); px(50, 17, C.white); px(49, 18, C.white); px(50, 18, C.white);   // low sun
-    [[33, 22, 38, 30], [39, 18, 44, 30], [47, 24, 51, 30], [52, 16, 58, 30]].forEach(function (b, i) {
-      rect(b[0], b[1], b[2], b[3], i % 2 ? "#2c4f8a" : "#6a7a94");
-    });
-    [[34, 24], [40, 20], [42, 23], [48, 26], [53, 18], [56, 20], [54, 23], [57, 26]].forEach(function (w) { px(w[0], w[1], C.yellow); });
-    rect(45, 9, 46, 33, C.white);
-  }
-
-  // A small plant on the windowsill. It leans a little, now and then.
-  function drawPlant() {
-    var lean = still ? 0 : [0, 0, 0, 1, 0, 0, 0, -1][(frame >> 2) % 8];
-    rect(55, 32, 58, 33, C.ink); rect(56, 32, 57, 33, C.red);
-    px(56, 31, C.green); px(57, 31, C.green);
-    px(56 + lean, 30, C.green); px(57 + lean, 29, C.green); px(55 + lean, 29, C.green);
-    px(56 + lean, 28, C.green);
-  }
-
-  function drawWindow() {
-    if (cond.night) drawNight();
-    else if (cond.dusk) drawDusk();
-    if (!cond.night && !still) {
-      if (!cond.dusk) {
-      // clouds drift across both panes
-      rect(35, 11, 39, 12, C.sky); rect(50, 12, 55, 13, C.sky);
-      var drift = (frame >> 3) % 26;
-      [[35, 11, 5], [50, 12, 6]].forEach(function (c) {
-        for (var i = 0; i < c[2]; i++) {
-          var x = 33 + (c[0] - 33 + i + drift) % 26;
-          px(x, c[1], C.white); px(x, c[1] + 1, C.white);
-        }
-      });
-      }
-      // a stalled EDSA: cars creep one pixel at a time, brake lights blinking
-      rect(33, 31, 58, 33, C.dark);
-      var creep = Math.floor(frame / 10) % 26;
-      [[35, C.red], [38, C.white], [41, C.red], [44, C.yellow], [48, C.yellow], [51, C.red], [55, C.white]].forEach(function (c, i) {
-        var braking = c[1] === C.red && (frame + i * 3) % 8 < 2;
-        px(33 + (c[0] - 33 + creep) % 26, 32, braking ? C.ink : c[1]);
-      });
-      rect(45, 9, 46, 33, C.white);
-    }
-    for (var i = 0; i < Math.min(litWindows, LIGHTS.length); i++) px(LIGHTS[i][0], LIGHTS[i][1], C.yellow);
-    drawPlant();
-    if (cond.parol) {
-      drawParol();
-      if (!still && frame % 6 < 3) px(52, 12, C.yellow);
-    }
-    if (P.rainy()) {
-      // rain falls: short streaks sliding down every third column
-      var f = still ? 0 : frame;
-      for (var x = 33; x <= 58; x += 3) {
-        if (x === 45) continue;
-        for (var k = 0; k < 2; k++) {
-          var y = 9 + (x * 13 + k * 11 + f * 3) % 22;
-          px(x, y, C.grey);
-          if (y < 30) px(x, y + 1, C.white);
-        }
-      }
-    }
   }
 
   // Cabinets under the counter. An open one shows what is inside.
@@ -314,7 +352,7 @@
       } else {
         for (var k = 0; k < 3; k++) { rect(x + k * 4, 58, x + k * 4 + 2, 62, C.red); px(x + k * 4 + 1, 60, C.yellow); }
         for (k = 0; k < 4; k++) rect(x + k * 3, 65, x + k * 3, 70, C.white);
-        rect(x + 12 - 12, 71, x + 10, 71, C.steel);
+        rect(x, 71, x + 10, 71, C.steel);
       }
     });
     if (!counts.solved2) {
@@ -330,27 +368,36 @@
     }
   }
 
-  // The building cat, asleep on the floor. It breathes, and wakes for a moment when touched.
+  // The building cat, asleep on the floor. It breathes, twitches an ear,
+  // and wakes for a moment when touched.
+  var CAT = [
+    "..k...k...............",
+    ".kok.kok...kkkkkkk....",
+    ".kooooook.kobobobook..",
+    "kooooooookoobobobooook",
+    "kokkokkokooooooooooook",
+    "koooroookooooooooooook",
+    ".kowwwokoooooooookkkk.",
+    "..kkkkk.kkkkkkkkk....."
+  ];
   function drawCat() {
-    var breath = !still && !catAwake && (frame >> 2) % 2;
-    rect(35, 122, 47, 127, C.ink); rect(36, 123, 46, 126, C.orange);          // body
-    rect(37, 121 - breath, 45, 121 - breath, C.ink);
-    if (breath) rect(37, 121, 45, 121, C.orange);
-    px(39, 123, C.brown); px(42, 123, C.brown); px(45, 123, C.brown);         // stripes
-    rect(30, 121, 36, 127, C.ink); rect(31, 122, 35, 126, C.orange);          // head
-    px(31, 120, C.ink); px(35, 120, C.ink);
-    px(33, 125, C.ink);                                                        // nose
+    var x = 29, y = 120, slow = frame >> 2;
+    var breath = !still && !catAwake && slow % 2;
+    rect(x + 2, y + 8, x + 19, y + 8, C.shade);
+    sprite(x, y, CAT);
     if (catAwake) {
-      px(32, 123, C.green); px(34, 123, C.green);
-      var up = (frame % 2);
-      rect(48, 124 - up * 2, 48, 126, C.ink); px(49, 124 - up * 2, C.ink);    // tail flick
-    } else {
-      rect(32, 124, 32, 124, C.ink); px(34, 124, C.ink);                      // eyes shut
-      rect(48, 126, 50, 126, C.ink);                                           // tail at rest
-      if (!still) {
-        var z = (frame >> 2) % 3;
-        px(28 - z, 118 - z * 2, C.steel); px(29 - z, 118 - z * 2, C.steel); px(28 - z, 119 - z * 2, C.steel);
-      }
+      px(x + 2, y + 4, C.green); px(x + 5, y + 4, C.green);                    // eyes open
+      var up = frame % 2;
+      rect(x + 21, y + 1 + up, x + 21, y + 5, C.ink);                          // tail up, flicking
+      px(x + 20 + up * 2, y + 1 + up, C.ink);
+      px(x + 20, y + 6, C.orange);
+      return;
+    }
+    if (breath) { rect(x + 11, y, x + 17, y, C.ink); sprite(x + 11, y + 1, ["obobobo"]); }
+    if (!still && frame % 24 === 23) { px(x + 6, y, C.orange); px(x + 7, y, C.ink); px(x + 6, y - 1, C.ink); }   // ear twitch
+    if (!still) {
+      var z = slow % 3;
+      px(x - 2 - z, y - 2 - z * 2, C.steel); px(x - 1 - z, y - 2 - z * 2, C.steel); px(x - 2 - z, y - 1 - z * 2, C.steel);
     }
   }
 
@@ -364,8 +411,8 @@
     // water dispenser: a bubble rises in the bottle now and then
     var b = frame % 36;
     if (b < 4 && coffee.pour === 0) px(7, 38 - b, C.white);
-    // microwave: running during lunch rush, or for a few seconds after a tap
-    if (mwave > 0 || cond.lunch) {
+    // microwave: running during lunch rush, or while something is being heated
+    if (mw.endAt || cond.lunch) {
       rect(40, 42, 50, 46, frame % 2 ? C.yellow : C.orange);
       var plate = [0, 1, 2, 1][frame % 4];
       rect(43 + plate, 45, 46 + plate, 45, C.ink);
@@ -374,7 +421,7 @@
     }
   }
 
-  // Tap flash on a background object: a plus sign that opens out, two frames.
+  // Tap flash on a background object: a plus sign that opens out.
   function drawSpark() {
     if (!spark) return;
     var r = spark.n === 2 ? 2 : 4, c = spark.n === 2 ? C.white : C.yellow;
@@ -382,8 +429,6 @@
     px(spark.x, spark.y - r, c); px(spark.x, spark.y + r, c);
     if (spark.n === 1) { px(spark.x - 3, spark.y - 3, c); px(spark.x + 3, spark.y - 3, c); px(spark.x - 3, spark.y + 3, c); px(spark.x + 3, spark.y + 3, c); }
   }
-
-  var CENTER = { microwave: [48, 44], ref: [76, 55], aircon: [45, 89], bulletin: [12, 22], clock: [76, 16] };
 
   function draw() {
     if (!ctx) return;
@@ -514,6 +559,7 @@
       var found = !secret.slip && !counts.solved2;
       if (found) secret.slip = true;
       setTimeout(function () {
+        if (!active()) return;
         if (parcelOpen) newSheet();
         if (found) { blip(900, 1300, 200); P.say(copyById("secret2-slip")); draw(); }
       }, 500);
@@ -549,10 +595,12 @@
     draw();
   }
 
-  function tapDetail(object) {
-    if (!still && CENTER[object]) spark = { x: CENTER[object][0], y: CENTER[object][1], n: 2 };
+  function tapDetail(object, b) {
+    // flash at the middle of the tapped button, on the art grid
+    var k = 90 / $("room").offsetWidth;
+    if (!still) spark = { x: Math.round((b.offsetLeft + b.offsetWidth / 2) * k), y: Math.round((b.offsetTop + b.offsetHeight / 2) * k), n: 2 };
     draw();
-    if (MINI[object]) openMini(object);
+    if (MINI[object] && b.dataset.spot === object) openMini(object);
     if (object === "bulletin") return;      // the notices speak for the board
     var l = line("background", object);
     if (l) P.say(l.text);
@@ -787,9 +835,8 @@
       if (--mw.queue === 0) mw.endAt = P.now() + mw.set * 1000;
     }
     if (mw.endAt) {
-      mwave = 2;
       if (P.now() >= mw.endAt) {
-        mw.endAt = 0; mw.set = 0; mwave = 0;
+        mw.endAt = 0; mw.set = 0;
         blip(1500, 1400, 180);   // ding
         microwaveDone();
       }
@@ -838,14 +885,14 @@
     else if (spot === "window") tapWindow();
     else if (spot === "cat") tapCat();
     else if (spot.indexOf("cab") === 0) tapCabinet(+spot.charAt(3) - 1);
-    else tapDetail(spot);
+    else tapDetail(spot === "unit" ? "aircon" : spot, b);   // the wall unit speaks for the aircon, the remote opens the panel
   }
 
   function reset() {
     used = {};
     coffee = { step: 0, stirs: 0, pour: 0 };
     coverUp = false;
-    coverDy = 0; shake = 0; mwave = 0; spark = null;
+    coverDy = 0; shake = 0; spark = null;
     closeMini();
     ac = { temp: 18, idle: 0 };
     mw = { set: 0, secs: 0, endAt: 0, queue: 0, queueAt: 0, item: "bread" };
@@ -880,6 +927,11 @@
     });
     $("wrap-close").addEventListener("click", closeParcel);
     $("mini-close").addEventListener("click", closeMini);
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "Escape" || !active()) return;
+      if (mini) { closeMini(); draw(); }
+      else if (parcelOpen) closeParcel();
+    });
     $("sound").addEventListener("click", function () {
       setSound(!soundOn);
       P.store.set(SOUND_KEY, soundOn ? "1" : "0");

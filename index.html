@@ -3,7 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Break Muna</title>
+<meta name="description" content="A five minute break in an office pantry. Then the door closes for thirty.">
+<meta name="theme-color" content="#1f1a24">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Break Muna">
+<meta property="og:description" content="A five minute break in an office pantry. Then the door closes for thirty.">
+<!-- Link preview image. LinkedIn wants a full address here: prefix the domain once it is chosen. -->
+<meta property="og:image" content="assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="stylesheet" href="css/pantry.css">
 </head>
 <body>
@@ -22,52 +35,37 @@
     <canvas class="fx" id="fx" width="90" height="130" aria-hidden="true"></canvas>
     <canvas class="hands" id="hands" width="17" height="17" aria-hidden="true"></canvas>
 
-    <!-- Stations. Positions are percentages of the 90 by 130 art grid. -->
-    <button type="button" class="spot station" data-spot="dispenser" data-cursor="spoon" aria-label="Water dispenser"
-      style="left:2.2%;top:23.8%;width:11.6%;height:15.4%"></button>
-    <button type="button" class="spot station" data-spot="sachet" data-cursor="spoon" aria-label="3-in-1 coffee sachets"
-      style="left:13.8%;top:28.5%;width:12.2%;height:10.7%"></button>
-    <button type="button" class="spot station" data-spot="mug" data-cursor="spoon" aria-label="Mug"
-      style="left:26%;top:26.5%;width:12.2%;height:12.7%"></button>
-    <button type="button" class="spot station" data-spot="merienda" data-cursor="fork" aria-label="Merienda tray"
-      style="left:15.6%;top:59.2%;width:27.8%;height:11.5%"></button>
-    <button type="button" class="spot station" data-spot="parcel" data-cursor="finger" aria-label="Parcel pile"
-      style="left:63.3%;top:70.8%;width:36.7%;height:23.8%"></button>
-    <button type="button" class="spot station" data-spot="window" data-cursor="eyes" aria-label="The window"
-      style="left:33.3%;top:4.6%;width:35.6%;height:24.6%"></button>
+    <!-- Stations. Each button is placed over its object in css/pantry.css. -->
+    <button type="button" class="spot station" data-spot="dispenser" data-cursor="spoon" aria-label="Water dispenser"></button>
+    <button type="button" class="spot station" data-spot="sachet" data-cursor="spoon" aria-label="3-in-1 coffee sachets"></button>
+    <button type="button" class="spot station" data-spot="mug" data-cursor="spoon" aria-label="Mug"></button>
+    <button type="button" class="spot station" data-spot="merienda" data-cursor="fork" aria-label="Merienda tray"></button>
+    <button type="button" class="spot station" data-spot="parcel" data-cursor="finger" aria-label="Parcel pile"></button>
+    <button type="button" class="spot station" data-spot="window" data-cursor="eyes" aria-label="The window"></button>
 
     <!-- Cabinets under the counter, and the building cat. -->
-    <button type="button" class="spot detail" data-spot="cab1" aria-label="First cabinet"
-      style="left:0%;top:41.5%;width:17.2%;height:13.8%"></button>
-    <button type="button" class="spot detail" data-spot="cab2" aria-label="Second cabinet"
-      style="left:17.2%;top:41.5%;width:17.2%;height:13.8%"></button>
-    <button type="button" class="spot detail" data-spot="cab3" aria-label="Third cabinet"
-      style="left:34.4%;top:41.5%;width:17.8%;height:13.8%"></button>
-    <button type="button" class="spot detail" data-spot="cab4" aria-label="Supply cabinet"
-      style="left:52.2%;top:41.5%;width:17.8%;height:13.8%"></button>
-    <button type="button" class="spot detail" data-spot="cat" aria-label="The building cat"
-      style="left:31.1%;top:89.2%;width:25.6%;height:10.8%"></button>
+    <button type="button" class="spot detail" data-spot="cab1" aria-label="First cabinet"></button>
+    <button type="button" class="spot detail" data-spot="cab2" aria-label="Second cabinet"></button>
+    <button type="button" class="spot detail" data-spot="cab3" aria-label="Third cabinet"></button>
+    <button type="button" class="spot detail" data-spot="cab4" aria-label="Supply cabinet"></button>
+    <button type="button" class="spot detail" data-spot="cat" aria-label="The building cat"></button>
 
     <!-- Background details, one line each. -->
-    <button type="button" class="spot detail" data-spot="microwave" aria-label="Microwave"
-      style="left:40%;top:29.2%;width:27.8%;height:9.2%"></button>
-    <button type="button" class="spot detail" data-spot="ref" aria-label="Ref"
-      style="left:72.2%;top:22.3%;width:26.7%;height:39.2%"></button>
-    <button type="button" class="spot detail" data-spot="aircon" aria-label="Aircon remote"
-      style="left:44.4%;top:63.8%;width:12.3%;height:7.7%"></button>
-    <button type="button" class="spot detail" data-spot="bulletin" aria-label="Bulletin board"
-      style="left:2.2%;top:10%;width:24.4%;height:13.8%"></button>
-    <button type="button" class="spot detail" data-spot="clock" aria-label="Wall clock"
-      style="left:74.4%;top:5.4%;width:20%;height:13.8%"></button>
+    <button type="button" class="spot detail" data-spot="microwave" aria-label="Microwave"></button>
+    <button type="button" class="spot detail" data-spot="ref" aria-label="Ref"></button>
+    <button type="button" class="spot detail" data-spot="aircon" aria-label="Aircon remote"></button>
+    <button type="button" class="spot detail" data-spot="unit" aria-label="Aircon"></button>
+    <button type="button" class="spot detail" data-spot="bulletin" aria-label="Bulletin board"></button>
+    <button type="button" class="spot detail" data-spot="clock" aria-label="Wall clock"></button>
 
     <div class="lights" aria-hidden="true"></div>
-    <div class="wrap" id="wrap" role="group" aria-label="Bubble wrap" hidden>
-      <button type="button" class="ctl wrap-close" id="wrap-close" aria-label="Put the parcel down">&#x2715;</button>
+    <div class="panel" id="wrap" role="group" aria-label="Bubble wrap" hidden>
+      <button type="button" class="ctl panel-close" id="wrap-close" aria-label="Put the parcel down">&#x2715;</button>
       <div class="wrap-grid" id="wrap-grid"></div>
     </div>
 
-    <div class="mini" id="mini" role="group" hidden>
-      <button type="button" class="ctl wrap-close" id="mini-close" aria-label="Close">&#x2715;</button>
+    <div class="panel" id="mini" role="group" hidden>
+      <button type="button" class="ctl panel-close" id="mini-close" aria-label="Close">&#x2715;</button>
       <div class="mini-body" id="mini-body"></div>
     </div>
 

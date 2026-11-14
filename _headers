@@ -1,3 +1,8 @@
+# The sha256 in style-src is the inline style block of 404.html.
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'sha256-BmUu7zIgF9A88ojZEqL/cXvOubVIdPcJAGUo2jS+SBo='; img-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin

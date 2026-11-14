@@ -34,13 +34,15 @@ The whole site is one pixel-art pantry in portrait orientation, drawn like a roo
 | Parcel pile | Open a parcel left at reception, pop the bubble wrap | Popping, with sound if enabled | Bubbles popped |
 | The window | Do nothing. Rain, a stalled EDSA, lights coming on. | A quiet counter of seconds spent not touching anything | Seconds at the window |
 
-**Background details, not stations.** These are tappable for one line each and make the room feel inhabited: the microwave queue, the ref with someone's forgotten baon, the aircon remote, the bulletin board, and the wall clock that shows the break time remaining.
+**Background details, not stations.** These are tappable for one line each and make the room feel inhabited: the microwave queue, the ref with someone's forgotten baon, the aircon and its remote, the bulletin board, the cabinets under the counter, the building cat, and the wall clock. The clock hands show the real time. Its rim fills red, clockwise from 12, as the break runs out.
+
+**Mini panels and hidden cases.** The aircon remote, ref, bulletin board and microwave each open a small panel with one thing to do. Two hidden cases run through them (the October baon, the supply cabinet). Solving one stamps the receipt in place of the barcode. Neither is announced, scored, or required.
 
 **Design rules**
 
 - Nothing can be failed or lost. A break toy with a fail state is work.
 - Each station is complete in 60 to 90 seconds, so three stations and the window fit in five minutes.
-- The wall clock is the only timer on screen. No digital countdown until the last 30 seconds.
+- The wall clock is the only timer on screen. There is no digital countdown.
 
 **Pixel style**
 
@@ -64,7 +66,7 @@ The break lasts 5:00 from the moment the visitor taps the door, and the pantry t
 
 1. **Landing.** A closed pantry door and one line of copy. Nothing is running yet, so link previews and idle tabs do not burn a break.
 2. **Enter.** Tapping the door stores a start time and opens the room.
-3. **In break.** The wall clock runs. At 4:30 the lights flicker once and a small countdown appears.
+3. **In break.** The wall clock runs. At 4:30 the lights flicker once.
 4. **Early exit.** A "Balik na ako" button is always available. It ends the break and prints the receipt.
 5. **Close.** At 5:00 the lights go off, the stations stop responding, and the receipt prints.
 6. **Cooldown.** For 30 minutes the door shows a closed sign, the reopening time, a fresh line of copy, and the last receipt.
@@ -89,7 +91,7 @@ The room reads the device clock and changes its copy, lighting and merienda to m
 | Lunch rush | Daily, 11:45 to 13:00 | Microwave queue at its longest, queue lines |
 | Merienda hour | Daily, 15:00 to 16:00 | Merienda tray is the lit object in the room |
 | Friday close | Fri, after 16:30 | Late meeting invite lines, lighter mood |
-| Overtime | Any day, after 18:30 | Half the lights off, window shows night traffic |
+| Overtime | Any day, 18:30 to 05:00 | Half the lights off, window shows night traffic |
 | Payday | 15th and last day of month | Better merienda, payday lines |
 | Petsa de peligro | 3 days before each payday | Merienda downgrades, budget lines |
 | Ber months | Sept 1 to Dec 25 | Christmas party committee notices, parol on the window |
@@ -193,6 +195,7 @@ The site is static files on a free static host, with no server, no database, no 
 | Motion | Honors the reduced-motion setting. No flashing beyond the single light flicker. |
 | Accessibility | Every station is a real button with a label. Receipt text is also available as text. |
 | Privacy | No cookies, no tracking scripts, no personal data collected |
+| Security | No third-party requests. A Content-Security-Policy allows same-origin scripts, styles and images only, so no inline scripts or `style` attributes. Nothing read from storage or the URL is written as HTML. |
 | Analytics | Optional cookieless page counter only |
 | Hosting | Any static host with a custom domain and HTTPS |
 
@@ -262,7 +265,11 @@ js/receipt.js       receipt layout, PNG export, share and download
 data/copy.js        every line of copy, tagged
 assets/sprites/     pixel sprite sheets (PNG)
 assets/cursors/     the five cursor icons (PNG)
-assets/og.png       link preview image of the closed door
+assets/og.png       link preview image of the pantry door
+assets/favicon.png  tab icon
+tools/make_art.py   draws every PNG. The art source, not a build step.
+_headers            security headers, for hosts that read the file
+404.html            the page for a wrong address
 SPEC.md             this document
 ```
 

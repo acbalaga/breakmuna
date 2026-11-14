@@ -36,7 +36,8 @@
     if (day !== 0 && day !== 6 && mins >= 11 * 60 + 45 && mins < 13 * 60) on.push("lunch_rush");
     if (mins >= 15 * 60 && mins < 16 * 60) on.push("merienda_hour");
     if (day === 5 && mins >= 16 * 60 + 30) on.push("friday_close");
-    if (mins >= 18 * 60 + 30) on.push("overtime");
+    // overtime runs through the night, until the first commuters at 5:00
+    if (mins >= 18 * 60 + 30 || mins < 5 * 60) on.push("overtime");
     if (date === 15 || date === last) on.push("payday");
     if ((date >= 12 && date <= 14) || (date >= last - 3 && date < last)) on.push("petsa_de_peligro");
     if ((month >= 8 && month <= 10) || (month === 11 && date <= 25)) on.push("ber_months");

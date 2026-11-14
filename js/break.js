@@ -37,6 +37,15 @@
   function json(k) {
     try { return JSON.parse(store.get(k)); } catch (e) { return null; }
   }
+  // The stored receipt, or null when it is missing or not shaped like one.
+  // Storage can be edited by hand, so nothing read from it is trusted to have the right types.
+  function lastReceipt() {
+    var r = json(KEY.last);
+    if (!r || typeof r !== "object") return null;
+    if (![r.start, r.end, r.reopen].every(function (n) { return typeof n === "number" && isFinite(n); })) return null;
+    if (!r.counts || typeof r.counts !== "object") r.counts = {};
+    return r;
+  }
 
   var $ = function (id) { return document.getElementById(id); };
   var el = {};
@@ -44,6 +53,8 @@
   var warned = false;
   var lastElapsed = 0;
   var lastSecond = -1;
+  var still = false;     // reduced motion: no second hand
+  var opener = null;     // what had focus before the receipt opened
 
   // Where the stored timestamps say we are.
   function phase() {
@@ -96,7 +107,7 @@
     el.sign.hidden = false;
     el.doorBtn.disabled = true;
     el.doorBtn.setAttribute("aria-label", "Pantry door, closed.");
-    el.lastReceipt.hidden = !json(KEY.last);
+    el.lastReceipt.hidden = !lastReceipt();
     var line = pick("door");
     say((line ? line + "\n" : "") + "Pantry reopens at " + P.formatClock(reopen) + ".");
   }
@@ -135,7 +146,7 @@
     var s = num(KEY.start);
     if (s === null) return;
     var receipt = { start: s, end: end, reopen: end + COOLDOWN_MS, counts: json(KEY.counts) || {} };
-    if (P.completeReceipt) P.completeReceipt(receipt);
+    P.completeReceipt(receipt);
     store.set(KEY.end, end);
     store.set(KEY.last, JSON.stringify(receipt));
     document.dispatchEvent(new CustomEvent("pantry:close", { detail: receipt }));
@@ -194,6 +205,14 @@
     line(ctx, 8, 8, 8 + Math.round(Math.sin(hh) * 3), 8 - Math.round(Math.cos(hh) * 3));
     ctx.fillStyle = "#1f1a24";
     ctx.fillRect(8, 8, 1, 1);
+
+    if (still || view !== "break") return;
+    // Second hand: one red dot inside the rim. It hesitates at 9, then recovers.
+    var sec = now.getSeconds();
+    if (sec === 46) sec = 45;
+    var sa = sec / 60 * 2 * Math.PI;
+    ctx.fillStyle = "#c8483c";
+    ctx.fillRect(8 + Math.round(Math.sin(sa) * 5), 8 - Math.round(Math.cos(sa) * 5), 1, 1);
   }
 
   // ---- tick ---------------------------------------------------------------
@@ -229,14 +248,27 @@
   // ---- receipt slip ---------------------------------------------------------
 
   function openReceipt() {
-    var r = json(KEY.last);
+    var r = lastReceipt();
     if (!r) return;
     P.renderReceipt(r);
+    opener = document.activeElement;
     el.receipt.hidden = false;
     el.receiptClose.focus();
   }
   function closeReceipt() {
+    if (el.receipt.hidden) return;
     el.receipt.hidden = true;
+    if (opener && opener.focus && !opener.disabled) opener.focus();
+    opener = null;
+  }
+  // The slip is a modal: Escape closes it and Tab stays inside it.
+  function receiptKeys(e) {
+    if (el.receipt.hidden) return;
+    if (e.key === "Escape") { closeReceipt(); return; }
+    if (e.key !== "Tab") return;
+    var b = el.receipt.querySelectorAll("button"), first = b[0], last = b[b.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   }
 
   // ---- init -------------------------------------------------------------------
@@ -245,7 +277,6 @@
     ["room", "door", "dialog", "sign", "exit", "hands", "receipt"].forEach(function (id) { el[id] = $(id); });
     el.doorBtn = $("door-btn");
     el.lastReceipt = $("last-receipt");
-    el.receiptText = $("receipt-text");
     el.receiptClose = $("receipt-close");
 
     el.doorBtn.addEventListener("click", enter);
@@ -254,6 +285,8 @@
     });
     el.lastReceipt.addEventListener("click", openReceipt);
     el.receiptClose.addEventListener("click", closeReceipt);
+    document.addEventListener("keydown", receiptKeys);
+    try { still = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
 
     var p = phase();
     if (p.name === "break") startBreakView();

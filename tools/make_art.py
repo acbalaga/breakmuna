@@ -8,7 +8,7 @@ import os, struct, zlib
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# 24-color palette (SPEC: limited palette of about 24 colors)
+# 25-color palette (SPEC: limited palette of about 24 colors)
 PAL = [
     "1f1a24",  # 0 outline
     "e8dcc0",  # 1 wall
@@ -34,6 +34,7 @@ PAL = [
     "b88454",  # 21 cork
     "e8b088",  # 22 skin
     "6a7a94",  # 23 building
+    "8c7c60",  # 24 floor shadow
 ]
 CLEAR = len(PAL)  # transparent index
 
@@ -110,24 +111,75 @@ def text(x, y, s, c, k=1):
         x += (len(gl[0]) + 1) * k
 
 
+def floor(top):
+    for y in range(top, H):
+        for x in range(W):
+            g[y][x] = 3 if ((x // 8) + ((y - top) // 8)) % 2 == 0 else 4
+    R(0, top, W - 1, top, 0)
+
+
+# The pantry door with its frame. ox, oy is the offset from its place in door.png.
+def draw_door(ox, oy):
+    def b(x0, y0, x1, y1, fill, line=0):
+        box(x0 + ox, y0 + oy, x1 + ox, y1 + oy, fill, line)
+
+    def r(x0, y0, x1, y1, c):
+        R(x0 + ox, y0 + oy, x1 + ox, y1 + oy, c)
+
+    r(67, 24, 68, 95, 2)                          # frame shadow on the wall
+    b(23, 22, 66, 100, 5)
+    r(24, 23, 65, 23, 6)
+    b(26, 25, 63, 100, 6)
+    r(27, 26, 27, 99, 7); r(62, 26, 62, 99, 5)    # lit edge, shaded edge
+    r(27, 45, 28, 46, 10); r(27, 84, 28, 85, 10)  # hinges
+    b(32, 31, 57, 55, 17)
+    r(33, 54, 56, 54, 16)
+    for i in range(6):
+        r(36 + i, 42 - i, 36 + i, 42 - i, 8); r(44 + i, 50 - i, 44 + i, 50 - i, 8)
+    b(30, 60, 59, 68, 8)
+    text(33 + ox, 62 + oy, "PANTRY", 0)
+    b(56, 70, 61, 76, 10)                         # knob plate
+    b(57, 71, 60, 74, 17); r(58, 72, 58, 72, 8)
+    b(31, 78, 58, 95, 7, 5)
+    r(32, 79, 57, 79, 19); r(32, 94, 57, 94, 6)
+
+
 def door():
     canvas(90, 130, 1)
     R(0, 0, 89, 1, 2)
     R(0, 96, 89, 99, 5)
-    for y in range(100, H):
-        for x in range(W):
-            g[y][x] = 3 if ((x // 8) + ((y - 100) // 8)) % 2 == 0 else 4
-    R(0, 100, 89, 100, 0)
+    R(0, 96, 89, 96, 6)
+    floor(100)
     text(4, 6, "BREAK MUNA", 0, 2)
-    box(23, 22, 66, 100, 5)
-    box(26, 25, 63, 100, 6)
-    box(32, 31, 57, 55, 17)
-    for i in range(6):
-        P(36 + i, 42 - i, 8); P(44 + i, 50 - i, 8)
-    box(30, 60, 59, 68, 8)
-    text(33, 62, "PANTRY", 0)
-    box(57, 71, 61, 75, 17)
-    box(31, 78, 58, 95, 7, 5)
+    # biometric scanner beside the door
+    R(81, 49, 81, 59, 2); R(73, 60, 81, 60, 2)
+    box(72, 48, 80, 59, 11)
+    R(74, 50, 78, 53, 18); P(75, 51, 8)
+    R(75, 55, 77, 57, 9); P(79, 50, 15)
+    # potted plant
+    R(7, 100, 17, 101, 24)
+    box(7, 90, 15, 99, 15); R(8, 91, 14, 91, 16); R(7, 90, 15, 90, 0)
+    for x, y in [(11, 78), (10, 79), (11, 79), (12, 80), (11, 80), (11, 81), (10, 82), (11, 82),
+                 (7, 82), (8, 83), (9, 84), (10, 85), (14, 81), (13, 82), (15, 80), (13, 83), (12, 84),
+                 (6, 86), (7, 86), (8, 87), (9, 88), (15, 85), (16, 84), (14, 86), (13, 87),
+                 (11, 83), (11, 84), (11, 85), (11, 86), (11, 87), (11, 88), (11, 89), (10, 89), (12, 89), (12, 88), (10, 87)]:
+        P(x, y, 18)
+    # doormat
+    R(27, 110, 64, 110, 24)
+    box(26, 102, 63, 109, 15); R(28, 104, 61, 107, 16); R(28, 104, 61, 104, 15); R(28, 107, 61, 107, 15)
+    draw_door(0, 0)
+
+
+# Link preview, 1200 by 630 at 6 px per art pixel.
+def og():
+    canvas(200, 105, 1)
+    R(0, 0, 199, 1, 2)
+    R(0, 81, 199, 84, 5)
+    R(0, 81, 199, 81, 6)
+    floor(85)
+    draw_door(8, -15)
+    text(96, 26, "BREAK MUNA", 0, 2)
+    text(97, 44, "PANTRY OPEN", 11)
 
 
 def sign():
@@ -216,18 +268,25 @@ def room():
     # wall and floor
     R(0, 0, 89, 1, 2)
     R(0, 70, 89, 73, 5)
-    for y in range(74, H):
-        for x in range(W):
-            g[y][x] = 3 if ((x // 8) + ((y - 74) // 8)) % 2 == 0 else 4
-    R(0, 74, 89, 74, 0)
+    R(0, 70, 89, 70, 6)
+    floor(74)
+
+    # tile backsplash behind the counter
+    R(0, 38, 63, 38, 2); R(0, 44, 63, 44, 2)
+    for x in range(0, 64, 6):
+        R(x, 39, x, 43, 2)
+        R(x + 3, 45, x + 3, 49, 2)
 
     # aircon unit
+    R(4, 12, 27, 12, 2); R(27, 4, 27, 12, 2)
     box(3, 3, 26, 11, 8)
+    R(4, 10, 25, 10, 9)
     R(5, 7, 24, 7, 9)
     R(5, 9, 24, 9, 11)
     P(23, 5, 18)
 
     # bulletin board
+    R(4, 31, 23, 31, 2); R(23, 15, 23, 31, 2)
     box(3, 14, 22, 30, 21, 5)
     R(5, 16, 9, 21, 8); R(6, 18, 8, 18, 10); R(6, 20, 8, 20, 10)
     R(11, 16, 16, 19, 17)
@@ -238,7 +297,9 @@ def room():
         P(x, y, c)
 
     # window: sky, skyline, EDSA
+    R(61, 8, 62, 34, 2); R(31, 38, 62, 38, 2)
     box(31, 7, 60, 35, 8)
+    R(32, 34, 59, 34, 9); R(59, 8, 59, 34, 9)
     R(33, 9, 58, 33, 12)
     R(35, 11, 39, 12, 8); R(50, 12, 55, 13, 8)
     R(33, 22, 38, 30, 23); R(39, 18, 44, 30, 14)
@@ -254,6 +315,10 @@ def room():
 
     # wall clock (face only, js/break.js draws the hands)
     cx, cy = 76, 16
+    for y in range(cy - 8, cy + 11):
+        for x in range(cx - 8, cx + 11):
+            if (x - 1 - cx) ** 2 + (y - 2 - cy) ** 2 <= 52:
+                P(x, y, 2)                      # shadow on the wall
     for y in range(cy - 8, cy + 9):
         for x in range(cx - 8, cx + 9):
             d = (x - cx) ** 2 + (y - cy) ** 2
@@ -267,20 +332,23 @@ def room():
     R(0, 54, 62, 71, 6); R(0, 72, 62, 73, 5); R(63, 54, 63, 73, 0)
     for x in (15, 31, 47):
         R(x, 55, x, 71, 5)
+    for x0, x1 in [(1, 14), (16, 30), (32, 46), (48, 62)]:     # door panels
+        R(x0 + 2, 57, x1 - 2, 57, 7); R(x0 + 2, 57, x0 + 2, 69, 7)
+        R(x0 + 2, 69, x1 - 2, 69, 5); R(x1 - 2, 57, x1 - 2, 69, 5)
     for x in (13, 17, 29, 33, 45, 49):
         P(x, 62, 17)
 
     # water dispenser
-    box(4, 32, 10, 39, 13); R(5, 33, 5, 37, 12)
+    box(4, 32, 10, 39, 13); R(5, 33, 5, 37, 12); R(9, 34, 9, 38, 14)
     R(6, 40, 8, 40, 14)
     box(3, 41, 11, 49, 8)
     P(5, 44, 15); P(9, 44, 13); P(5, 45, 11); P(9, 45, 11)
-    R(4, 48, 10, 48, 10)
+    R(4, 48, 10, 48, 10); R(10, 42, 10, 47, 9)
 
     # 3-in-1 sachet box
     R(15, 40, 17, 43, 7); R(18, 41, 20, 43, 8); P(15, 40, 5); P(18, 41, 9)
     box(14, 43, 22, 49, 15)
-    R(16, 45, 20, 47, 17)
+    R(16, 45, 20, 47, 17); R(17, 46, 19, 46, 5)
 
     # mug
     box(25, 44, 30, 49, 8)
@@ -289,6 +357,7 @@ def room():
 
     # microwave
     box(37, 39, 59, 49, 9)
+    R(38, 40, 58, 40, 8); R(58, 41, 58, 48, 10)
     box(39, 41, 51, 47, 11)
     P(41, 45, 10); P(42, 44, 10); P(43, 43, 10)
     R(54, 41, 57, 42, 18)
@@ -296,8 +365,10 @@ def room():
         P(x, y, 10)
 
     # ref
+    R(66, 80, 89, 81, 24); R(88, 76, 89, 79, 24)
     box(66, 30, 87, 79, 9)
-    R(85, 31, 86, 78, 10)
+    R(85, 31, 86, 78, 10); R(67, 31, 67, 78, 8)
+    R(67, 44, 86, 44, 10); R(67, 78, 86, 78, 10)
     R(67, 45, 86, 45, 0)
     R(69, 38, 69, 43, 11); R(69, 48, 69, 58, 11)
     P(77, 34, 15); P(80, 36, 13)
@@ -310,8 +381,18 @@ def room():
         R(x, 27, x, 29, 20)
     R(81, 27, 82, 29, 8)
 
+    R(0, 75, 63, 75, 24)
+
+    # the new water bottle, delivered and still on the floor
+    R(1, 91, 8, 92, 24)
+    box(0, 79, 7, 90, 13); R(1, 80, 1, 89, 12); R(6, 81, 6, 89, 14)
+    R(1, 83, 6, 83, 14)
+    box(2, 76, 5, 79, 13); R(2, 76, 5, 76, 0); R(3, 77, 4, 77, 8)
+
     # table
+    R(9, 119, 51, 120, 24)
     R(11, 97, 13, 118, 5); R(47, 97, 49, 118, 5)
+    R(11, 100, 11, 118, 6); R(47, 100, 47, 118, 6)
     R(10, 97, 50, 99, 6)
     box(8, 92, 52, 96, 7)
     R(9, 93, 51, 93, 19)
@@ -325,9 +406,11 @@ def room():
     R(43, 89, 44, 89, 13); P(46, 89, 15); P(47, 89, 10)
 
     # parcel pile
+    R(57, 123, 89, 124, 24)
     box(58, 104, 77, 122, 19); R(67, 105, 69, 121, 7); R(60, 107, 64, 110, 8)
-    box(61, 93, 74, 103, 20); R(62, 97, 73, 98, 7); R(69, 100, 72, 101, 8)
-    box(76, 110, 88, 122, 20); R(81, 111, 83, 121, 7)
+    R(61, 108, 63, 108, 10); R(74, 105, 76, 121, 20)
+    box(61, 93, 74, 103, 20); R(62, 97, 73, 98, 7); R(69, 100, 72, 101, 8); R(62, 94, 73, 94, 19)
+    box(76, 110, 88, 122, 20); R(81, 111, 83, 121, 7); R(77, 111, 87, 111, 19)
     box(77, 105, 87, 109, 9)
     for y in range(106, 109):
         for x in range(78, 87):
@@ -473,6 +556,23 @@ krrrrrrrrkwwnwk.
 """,
 }
 
+FAVICON = """
+................
+.....g..g.......
+....g..g........
+.....g..g.......
+................
+..kkkkkkkkk.....
+..kwwwwwwwkkk...
+..kwwwwwwwk.kk..
+..kbbbbbbbk..k..
+..kwwwwwwwk.kk..
+..kwwwwwwwkkk...
+..kwwwwwwwk.....
+..kkkkkkkkk.....
+................
+"""
+
 BUBBLE = """
 ..dddd..........
 .dwwggd...dddd..
@@ -500,11 +600,14 @@ if __name__ == "__main__":
         write_png(os.path.join(ROOT, f"assets/sprites/{name}.png"), cursor_grid(art), scale=2)
     write_png(os.path.join(ROOT, "assets/sprites/bubble.png"),
               [[KEY[ch] for ch in r.ljust(16, ".")] for r in BUBBLE.strip("\n").split("\n")])
+    write_png(os.path.join(ROOT, "assets/favicon.png"), cursor_grid(FAVICON), scale=2)
     ref_items()
     write_png(os.path.join(ROOT, "assets/sprites/ref_items.png"), g)
     preview = os.environ.get("PREVIEW_DIR")
     door()
     write_png(os.path.join(ROOT, "assets/sprites/door.png"), g)
+    og()
+    write_png(os.path.join(ROOT, "assets/og.png"), g, scale=6)
     sign()
     write_png(os.path.join(ROOT, "assets/sprites/sign.png"), g)
     room()

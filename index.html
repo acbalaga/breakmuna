@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Break Muna</title>
+<link rel="stylesheet" href="css/pantry.css">
+</head>
+<body>
+<main class="pantry">
+  <div class="door" id="door">
+    <img class="room-art" src="assets/sprites/door.png" width="90" height="130" alt="The pantry door.">
+    <div class="door-glow" aria-hidden="true"></div>
+    <img class="sign" id="sign" src="assets/sprites/sign.png" width="29" height="17" alt="Closed" hidden>
+    <button type="button" class="door-btn" id="door-btn" aria-label="Pantry door. Tap to start a five minute break."></button>
+    <button type="button" class="ctl last-receipt" id="last-receipt" hidden>Last receipt</button>
+  </div>
+
+  <div class="room" id="room" hidden>
+    <img class="room-art" src="assets/sprites/room.png" width="90" height="130" alt="A small office pantry drawn in pixel art.">
+
+    <canvas class="fx" id="fx" width="90" height="130" aria-hidden="true"></canvas>
+    <canvas class="hands" id="hands" width="17" height="17" aria-hidden="true"></canvas>
+
+    <!-- Stations. Positions are percentages of the 90 by 130 art grid. -->
+    <button type="button" class="spot station" data-spot="dispenser" data-cursor="spoon" aria-label="Water dispenser"
+      style="left:2.2%;top:23.8%;width:11.6%;height:15.4%"></button>
+    <button type="button" class="spot station" data-spot="sachet" data-cursor="spoon" aria-label="3-in-1 coffee sachets"
+      style="left:13.8%;top:28.5%;width:12.2%;height:10.7%"></button>
+    <button type="button" class="spot station" data-spot="mug" data-cursor="spoon" aria-label="Mug"
+      style="left:26%;top:26.5%;width:12.2%;height:12.7%"></button>
+    <button type="button" class="spot station" data-spot="merienda" data-cursor="fork" aria-label="Merienda tray"
+      style="left:15.6%;top:59.2%;width:27.8%;height:11.5%"></button>
+    <button type="button" class="spot station" data-spot="parcel" data-cursor="finger" aria-label="Parcel pile"
+      style="left:63.3%;top:70.8%;width:36.7%;height:23.8%"></button>
+    <button type="button" class="spot station" data-spot="window" data-cursor="eyes" aria-label="The window"
+      style="left:33.3%;top:4.6%;width:35.6%;height:24.6%"></button>
+
+    <!-- Background details, one line each. -->
+    <button type="button" class="spot detail" data-spot="microwave" aria-label="Microwave"
+      style="left:40%;top:29.2%;width:27.8%;height:9.2%"></button>
+    <button type="button" class="spot detail" data-spot="ref" aria-label="Ref"
+      style="left:72.2%;top:22.3%;width:26.7%;height:39.2%"></button>
+    <button type="button" class="spot detail" data-spot="aircon" aria-label="Aircon remote"
+      style="left:44.4%;top:63.8%;width:12.3%;height:7.7%"></button>
+    <button type="button" class="spot detail" data-spot="bulletin" aria-label="Bulletin board"
+      style="left:2.2%;top:10%;width:24.4%;height:13.8%"></button>
+    <button type="button" class="spot detail" data-spot="clock" aria-label="Wall clock"
+      style="left:74.4%;top:5.4%;width:20%;height:13.8%"></button>
+
+    <div class="lights" aria-hidden="true"></div>
+    <div class="countdown" id="countdown" role="timer" aria-label="Break time remaining" hidden></div>
+    <div class="window-count" id="window-count" role="status" hidden></div>
+
+    <div class="wrap" id="wrap" role="group" aria-label="Bubble wrap" hidden>
+      <button type="button" class="ctl wrap-close" id="wrap-close" aria-label="Put the parcel down">&#x2715;</button>
+      <div class="wrap-grid" id="wrap-grid"></div>
+    </div>
+
+    <div class="controls">
+      <button type="button" class="ctl icon" id="exit" aria-label="Balik na ako. End the break and print the receipt." title="Balik na ako">
+        <img src="assets/sprites/exit.png" width="32" height="32" alt="">
+      </button>
+      <button type="button" class="ctl icon" id="sound" aria-label="Sound" aria-pressed="false" title="Sound">
+        <img src="assets/sprites/sound_off.png" width="32" height="32" alt="">
+      </button>
+    </div>
+  </div>
+
+  <div class="dialog" id="dialog" role="status" aria-live="polite" hidden></div>
+</main>
+
+<div class="receipt" id="receipt" role="dialog" aria-modal="true" aria-label="Break receipt" hidden>
+  <div class="slip">
+    <canvas id="receipt-canvas" width="1080" height="1350" aria-hidden="true"></canvas>
+    <pre class="sr-only" id="receipt-text"></pre>
+    <div class="receipt-actions">
+      <button type="button" class="ctl" id="receipt-share">Save image</button>
+      <button type="button" class="ctl" id="receipt-caption">Copy caption</button>
+      <button type="button" class="ctl" id="receipt-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="data/copy.js"></script>
+<script src="js/conditions.js"></script>
+<script src="js/receipt.js"></script>
+<script src="js/break.js"></script>
+<script src="js/room.js"></script>
+</body>
+</html>

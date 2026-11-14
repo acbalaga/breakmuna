@@ -24,6 +24,9 @@
   var shake = 0;              // frames left of the sachet being emptied
   var mwave = 0;              // frames left of the microwave running
   var spark = null;           // { x, y, n } tap flash on a background object
+  var mini = null;            // which mini panel is open: aircon, ref, bulletin, microwave
+  var ac = { temp: 18, idle: 0 };
+  var mw = { set: 0, endAt: 0, queue: 0, queueAt: 0 };
   var watch = null;           // { start, base } while at the window
   var litWindows = 0;
   var parcelOpen = false;
@@ -133,7 +136,7 @@
     if (coffee.step === 0 && !counts.coffee) hint = [18, 35];
     else if (coffee.step === 1) hint = [7, 27];
     else if (coffee.step === 2) hint = [27, 38];
-    if (hint && !parcelOpen) {
+    if (hint && !parcelOpen && !mini) {
       var y = hint[1] + (frame % 2);
       rect(hint[0] - 1, y, hint[0] + 1, y, C.red);
       px(hint[0], y + 1, C.red);
@@ -376,6 +379,7 @@
   }
 
   function tapParcel() {
+    closeMini();
     parcelOpen = true;
     $("wrap").hidden = false;
     if (!$("wrap-grid").children.length) newSheet();
@@ -402,10 +406,187 @@
 
   function tapDetail(object) {
     if (!still && CENTER[object]) spark = { x: CENTER[object][0], y: CENTER[object][1], n: 2 };
-    if (object === "microwave" && mwave === 0) { mwave = 16; blip(220, 200, 300); }
     draw();
+    if (MINI[object]) openMini(object);
+    if (object === "bulletin") return;      // the notices speak for the board
     var l = line("background", object);
     if (l) P.say(l.text);
+  }
+
+  // ---- mini panels ----------------------------------------------------------
+
+  function node(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text) n.textContent = text;
+    if (tag === "button") n.type = "button";
+    return n;
+  }
+  function key(text, label, fn) {
+    var b = node("button", "ctl", text);
+    b.setAttribute("aria-label", label);
+    b.addEventListener("click", function () { if (active()) fn(); });
+    return b;
+  }
+  function mmss(s) { return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
+
+  var MINI = {
+    // Change the temperature. Someone unseen sets it back to 18.
+    aircon: {
+      label: "Aircon remote",
+      build: function (body) {
+        var remote = node("div", "remote"), lcd = node("div", "lcd"), keys = node("div", "keys");
+        lcd.id = "ac-lcd";
+        function press(d) {
+          ac.temp = Math.max(16, Math.min(30, ac.temp + d));
+          ac.idle = 0;
+          blip(d > 0 ? 700 : 500, d > 0 ? 800 : 400, 50);
+          MINI.aircon.show();
+        }
+        keys.appendChild(key("\u25BC", "Cooler", function () { press(-1); }));
+        keys.appendChild(key("\u25B2", "Warmer", function () { press(1); }));
+        remote.appendChild(lcd); remote.appendChild(keys); body.appendChild(remote);
+        MINI.aircon.show();
+      },
+      show: function () { var l = $("ac-lcd"); if (l) l.textContent = ac.temp + "\u00B0C"; },
+      tick: function () {
+        if (ac.temp === 18) return;
+        if (++ac.idle < 10) return;
+        ac.temp += ac.temp > 18 ? -1 : 1;
+        MINI.aircon.show();
+        if (ac.temp === 18) {
+          blip(500, 400, 120);
+          var l = (window.PANTRY_COPY || []).filter(function (x) { return x.id === "bg-14"; })[0];
+          if (l && mini === "aircon") P.say(l.text);
+        }
+      }
+    },
+
+    // Open the ref and read what is on each container.
+    ref: {
+      label: "Inside the ref",
+      build: function (body) {
+        var shelves = node("div", "shelves");
+        for (var i = 0; i < 8; i++) {
+          var b = node("button", "baon c" + [1, 2, 4, 3, 2, 3, 1, 4][i]);
+          b.setAttribute("aria-label", "Container " + (i + 1));
+          b.addEventListener("click", function (e) {
+            if (!active()) return;
+            var c = e.currentTarget;
+            if (!c.dataset.line) {
+              var l = P.choose(P.lines(function (x) { return x.pool === "ref_item"; }), used);
+              c.dataset.line = l ? l.text : " ";
+              c.classList.add("seen");
+            }
+            blip(300, 260, 60);
+            if (c.dataset.line.trim()) P.say(c.dataset.line);
+          });
+          shelves.appendChild(b);
+        }
+        body.appendChild(shelves);
+      }
+    },
+
+    // Unpin the notices one at a time. Each pile is two deep.
+    bulletin: {
+      label: "Bulletin board",
+      build: function (body) {
+        var board = node("div", "board");
+        var left = P.lines(function (l) {
+          return (l.pool === "background" || l.pool === "condition") && l.object === "bulletin" && !used[l.id];
+        }).length;
+        var total = Math.min(8, left), n = 0;
+        for (var i = 0; i < 4; i++) {
+          var pile = node("div", "pile");
+          var deep = Math.min(2, Math.ceil((total - i) / 4));
+          for (var d = deep - 1; d >= 0; d--) {
+            var note = node("button", "note n" + (n++ % 3) + (d ? " under" : ""));
+            note.setAttribute("aria-label", "Notice");
+            note.addEventListener("click", function (e) {
+              if (!active()) return;
+              var t = e.currentTarget, p = t.parentNode;
+              t.remove();
+              if (p.lastChild) p.lastChild.classList.remove("under");
+              blip(800, 500, 60);
+              var l = line("background", "bulletin");
+              if (l) P.say(l.text);
+            });
+            pile.insertBefore(note, pile.firstChild);
+          }
+          board.appendChild(pile);
+        }
+        body.appendChild(board);
+      }
+    },
+
+    // Set a time, press start, wait for the ding. At lunch there is a queue first.
+    microwave: {
+      label: "Microwave",
+      build: function (body) {
+        var box = node("div", "mw"), win = node("div", "mw-window"), side = node("div", "mw-side"), lcd = node("div", "lcd");
+        win.id = "mw-window"; lcd.id = "mw-lcd";
+        win.appendChild(node("div", "mw-plate"));
+        side.appendChild(lcd);
+        side.appendChild(key("+10 s", "Add ten seconds", function () {
+          if (mw.endAt || mw.queue) return;
+          mw.set = Math.min(120, mw.set + 10);
+          blip(900, 900, 40);
+          MINI.microwave.show();
+        }));
+        side.appendChild(key("Start", "Start", function () {
+          if (mw.endAt || mw.queue || !mw.set) return;
+          blip(600, 600, 60);
+          if (cond.lunch) { mw.queue = 3; mw.queueAt = P.now(); }
+          else mw.endAt = P.now() + mw.set * 1000;
+          MINI.microwave.show();
+        }));
+        box.appendChild(win); box.appendChild(side); body.appendChild(box);
+        MINI.microwave.show();
+      },
+      show: function () {
+        var lcd = $("mw-lcd"), win = $("mw-window");
+        if (!lcd) return;
+        if (mw.queue) lcd.textContent = "Queue " + mw.queue;
+        else lcd.textContent = mmss(mw.endAt ? Math.max(0, Math.ceil((mw.endAt - P.now()) / 1000)) : mw.set);
+        win.classList.toggle("running", !!mw.endAt);
+      }
+    }
+  };
+
+  // Runs every frame whether or not the panel is open, so a started microwave still finishes.
+  function tickMini() {
+    MINI.aircon.tick();
+    if (mw.queue && P.now() - mw.queueAt >= 2000) {
+      mw.queueAt = P.now();
+      if (--mw.queue === 0) mw.endAt = P.now() + mw.set * 1000;
+    }
+    if (mw.endAt) {
+      mwave = 2;
+      if (P.now() >= mw.endAt) {
+        mw.endAt = 0; mw.set = 0; mwave = 0;
+        blip(1500, 1400, 180);   // ding
+        var l = line("background", "microwave");
+        if (l) P.say(l.text);
+      }
+    }
+    MINI.microwave.show();
+  }
+
+  function openMini(kind) {
+    closeParcel();
+    mini = kind;
+    var body = $("mini-body");
+    body.textContent = "";
+    $("mini").setAttribute("aria-label", MINI[kind].label);
+    MINI[kind].build(body);
+    $("mini").hidden = false;
+    draw();
+  }
+
+  function closeMini() {
+    mini = null;
+    $("mini").hidden = true;
+    $("mini-body").textContent = "";
   }
 
   // ---- taps ---------------------------------------------------------------------
@@ -438,6 +619,9 @@
     coffee = { step: 0, stirs: 0, pour: 0 };
     coverUp = false;
     coverDy = 0; shake = 0; mwave = 0; spark = null;
+    closeMini();
+    ac = { temp: 18, idle: 0 };
+    mw = { set: 0, endAt: 0, queue: 0, queueAt: 0 };
     watch = null;
     litWindows = 0;
     parcelOpen = false;
@@ -465,6 +649,7 @@
       if (e.target.classList.contains("bubble")) tapIcon(e, "finger");
     });
     $("wrap-close").addEventListener("click", closeParcel);
+    $("mini-close").addEventListener("click", closeMini);
     $("sound").addEventListener("click", function () {
       setSound(!soundOn);
       P.store.set(SOUND_KEY, soundOn ? "1" : "0");
@@ -486,7 +671,7 @@
       updateWatch();
       if (coffee.pour > 0) coffee.pour--;
       if (shake > 0) shake--;
-      if (mwave > 0 && --mwave === 0) blip(1500, 1400, 180);   // ding
+      tickMini();
       if (spark && --spark.n < 0) spark = null;
       var goal = coverUp ? -13 : 0;
       if (coverDy !== goal) coverDy = coverUp ? Math.max(goal, coverDy - 5) : Math.min(goal, coverDy + 5);

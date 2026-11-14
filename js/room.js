@@ -25,6 +25,8 @@
   var parcelOpen = false;
   var soundOn = false;
   var audio = null;
+  var cond = {};
+  var stirsNeeded = STIRS;
 
   function active() { return document.body.dataset.view === "break"; }
 
@@ -35,22 +37,39 @@
 
   // ---- copy ---------------------------------------------------------------
 
-  // A random unused line. No line repeats within a single break.
+  // A random unused line for a station or object. No line repeats within a single break.
+  // Condition lines tagged with the same object join in while their condition is active.
   function line(pool, object) {
-    var all = (window.PANTRY_COPY || []).filter(function (l) {
-      return l.pool === pool && !l.when && (!object || l.object === object);
-    });
-    var fresh = all.filter(function (l) { return !used[l.id]; });
-    if (!fresh.length) return null;
-    var l = fresh[Math.floor(Math.random() * fresh.length)];
-    used[l.id] = true;
-    return l;
+    var key = object || pool;
+    return P.choose(P.lines(function (l) {
+      if (l.pool === "condition") return l.object === key;
+      return l.pool === pool && (!object || l.object === object);
+    }), used);
   }
 
   // Picked by date, so officemates see the same item on the same day.
+  // Payday and petsa de peligro swap in their own items.
   function meriendaOfTheDay() {
-    var all = (window.PANTRY_COPY || []).filter(function (l) { return l.pool === "merienda" && !l.when; });
-    return all.length ? all[P.dayNumber() % all.length] : null;
+    var all = P.lines(function (l) { return l.pool === "merienda"; });
+    var timely = all.filter(function (l) { return l.when; });
+    var from = timely.length ? timely : all;
+    return from.length ? from[P.dayNumber() % from.length] : null;
+  }
+
+  // Said once on entering the room, when the day or hour has something to say.
+  function greet() {
+    var l = P.choose(P.lines(function (x) { return x.pool === "condition" && !x.object; }), used);
+    if (l) P.say(l.text);
+  }
+
+  // Lighting follows the clock.
+  function applyConditions() {
+    var room = $("room"), on = P.conditions();
+    function has(c) { return on.indexOf(c) !== -1; }
+    room.classList.toggle("subdued", has("monday_morning") || has("weekend"));
+    room.classList.toggle("half-lit", has("overtime"));
+    cond = { lunch: has("lunch_rush"), merienda: has("merienda_hour"), night: has("overtime"), parol: has("ber_months") };
+    stirsNeeded = has("monday_morning") ? 5 : STIRS;
   }
 
   // ---- sound ----------------------------------------------------------------
@@ -140,10 +159,61 @@
 
   var LIGHTS = [[35, 23], [37, 28], [41, 19], [43, 25], [40, 29], [49, 25], [50, 29], [54, 17], [57, 22], [53, 27], [56, 29], [34, 28]];
 
+  function drawNight() {
+    rect(33, 9, 58, 30, "#2c4f8a");
+    [[33, 22, 38, 30], [39, 18, 44, 30], [47, 24, 51, 30], [52, 16, 58, 30]].forEach(function (b) {
+      rect(b[0], b[1], b[2], b[3], C.ink);
+    });
+    [[34, 24], [36, 26], [37, 23], [40, 20], [42, 23], [41, 27], [43, 19], [40, 25], [48, 26], [50, 28],
+     [49, 25], [53, 18], [56, 20], [54, 23], [57, 26], [55, 28], [57, 17], [53, 21]].forEach(function (w, i) {
+      if (still || (i + (frame >> 3)) % 7) px(w[0], w[1], C.yellow);
+    });
+    // night traffic: tail lights one way, headlights the other, barely moving
+    rect(33, 31, 58, 33, C.ink);
+    var shift = still ? 0 : (frame >> 2) % 3;
+    for (var x = 33; x <= 58; x++) {
+      if ((x + shift) % 3 === 0) px(x, 31, C.red);
+      if ((x + 3 - shift) % 4 === 0) px(x, 33, C.white);
+    }
+    rect(45, 9, 46, 33, C.white);
+  }
+
+  function drawParol() {
+    px(52, 9, C.ink);
+    [[52, 10, C.red], [51, 11, C.red], [52, 11, C.yellow], [53, 11, C.red],
+     [50, 12, C.red], [51, 12, C.yellow], [52, 12, C.white], [53, 12, C.yellow], [54, 12, C.red],
+     [51, 13, C.red], [52, 13, C.yellow], [53, 13, C.red], [52, 14, C.red],
+     [51, 15, C.yellow], [53, 15, C.yellow], [51, 16, C.yellow], [53, 16, C.yellow]].forEach(function (p) {
+      px(p[0], p[1], p[2]);
+    });
+  }
+
+  // Lunch rush: baon containers waiting on top of the microwave.
+  function drawQueue() {
+    [[39, 35, 45, C.blue], [47, 35, 53, C.red], [55, 35, 58, C.yellow], [41, 32, 47, C.red], [49, 32, 55, C.blue]].forEach(function (b) {
+      rect(b[0], b[1], b[2], b[1] + 3, C.ink);
+      rect(b[0] + 1, b[1] + 1, b[2] - 1, b[1] + 2, C.white);
+      rect(b[0] + 1, b[1] + 1, b[2] - 1, b[1] + 1, b[3]);
+    });
+  }
+
+  // Merienda hour: the tray is the lit object in the room.
+  function drawSparkle() {
+    var pts = [[13, 80], [39, 79], [11, 87], [41, 86], [26, 74]];
+    pts.forEach(function (p, i) {
+      if (!still && (i + frame) % 2) return;
+      px(p[0], p[1], C.white);
+      px(p[0] - 1, p[1], C.yellow); px(p[0] + 1, p[1], C.yellow);
+      px(p[0], p[1] - 1, C.yellow); px(p[0], p[1] + 1, C.yellow);
+    });
+  }
+
   function drawWindow() {
+    if (cond.night) drawNight();
     // brake lights on a stalled EDSA
-    if (!still && frame % 4 < 2) { px(35, 32, C.dark); px(51, 32, C.dark); }
+    if (!cond.night && !still && frame % 4 < 2) { px(35, 32, C.dark); px(51, 32, C.dark); }
     for (var i = 0; i < Math.min(litWindows, LIGHTS.length); i++) px(LIGHTS[i][0], LIGHTS[i][1], C.yellow);
+    if (cond.parol) drawParol();
     if (P.rainy()) {
       var f = still ? 0 : frame;
       for (var y = 9; y <= 30; y++) {
@@ -159,6 +229,8 @@
     if (!ctx) return;
     ctx.clearRect(0, 0, 90, 130);
     drawWindow();
+    if (cond.lunch) drawQueue();
+    if (cond.merienda && !coverUp) drawSparkle();
     drawCoffee();
     if (coverUp) { drawFood(); drawCover(-13); } else drawCover(0);
   }
@@ -175,7 +247,7 @@
     } else if (spot === "mug" && coffee.step === 2) {
       coffee.stirs++;
       blip(1400, 1200, 40);
-      if (coffee.stirs >= STIRS) {
+      if (coffee.stirs >= stirsNeeded) {
         coffee.step = 3;
         counts.coffee = (counts.coffee || 0) + 1;
         save();
@@ -336,12 +408,14 @@
       if (watch && !(e.target.closest && e.target.closest('[data-spot="window"]'))) stopWatch();
     }, true);
 
-    document.addEventListener("pantry:enter", function () { reset(); load(); draw(); });
+    document.addEventListener("pantry:enter", function () { reset(); load(); applyConditions(); greet(); draw(); });
     document.addEventListener("pantry:close", function () { reset(); });
 
+    applyConditions();
     draw();
     setInterval(function () {
       if (!active()) return;
+      if (frame % 8 === 0) applyConditions();
       updateWatch();
       if (coffee.pour > 0) coffee.pour--;
       if (!still) frame++;

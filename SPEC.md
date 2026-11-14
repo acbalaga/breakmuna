@@ -236,15 +236,15 @@ Four decisions are still open, and the name is the only one that blocks launch.
 **Acceptance checks before launch**
 
 - [ ] A first-time visitor on a phone gets from link to inside the pantry in two taps.
-- [ ] The break ends at 5:00 even if the tab was closed or the phone was locked.
-- [ ] The door stays closed for 30 minutes and shows the correct reopening time.
+- [x] The break ends at 5:00 even if the tab was closed or the phone was locked.
+- [x] The door stays closed for 30 minutes and shows the correct reopening time.
 - [ ] The receipt image saves and shares correctly on Android Chrome and iPhone Safari.
 - [ ] The receipt reads correctly in a LinkedIn post preview on a phone.
-- [ ] Ten breaks in a row show no repeated line within a single break.
-- [ ] Every time condition has been checked with the debug override.
-- [ ] Sound is off on first load.
+- [x] Ten breaks in a row show no repeated line within a single break.
+- [x] Every time condition has been checked with the debug override.
+- [x] Sound is off on first load.
 - [ ] Every line in the copy pool passes the banned list.
-- [ ] Total page weight is under 500 KB.
+- [x] Total page weight is under 500 KB.
 
 ## Handoff notes for Claude Code
 

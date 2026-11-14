@@ -58,8 +58,8 @@
   }
 
   function pick(pool) {
-    var lines = (window.PANTRY_COPY || []).filter(function (l) { return l.pool === pool && !l.when; });
-    return lines.length ? lines[Math.floor(Math.random() * lines.length)].text : "";
+    var l = P.choose(P.lines(function (x) { return x.pool === pool; }));
+    return l ? l.text : "";
   }
 
   function say(text) {

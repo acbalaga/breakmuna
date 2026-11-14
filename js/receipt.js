@@ -22,8 +22,7 @@
     return (location.host + location.pathname).replace(/\/(index\.html)?$/, "");
   }
   function pick(pool) {
-    var lines = (window.PANTRY_COPY || []).filter(function (l) { return l.pool === pool && !l.when; });
-    return lines.length ? lines[Math.floor(Math.random() * lines.length)] : null;
+    return P.choose(P.lines(function (l) { return l.pool === pool; }));
   }
 
   P.formatClock = clock;

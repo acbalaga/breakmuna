@@ -7,7 +7,7 @@
   var C = {
     ink: "#1f1a24", white: "#f4f0e6", grey: "#c8c8c8", brown: "#6b4a32",
     red: "#c8483c", orange: "#e08a3c", yellow: "#f0cc5a", wood: "#b98a5a",
-    blue: "#4a8fd0", dark: "#55555e", steel: "#8c8c94"
+    blue: "#4a8fd0", dark: "#55555e", steel: "#8c8c94", sky: "#8cc4e8", wall: "#e8dcc0", green: "#5a9a52"
   };
   var COUNTS_KEY = "pantry.counts";
   var SOUND_KEY = "pantry.sound";
@@ -20,6 +20,10 @@
   var used = {};              // line ids already shown this break
   var coffee = { step: 0, stirs: 0, pour: 0 };   // 0 empty, 1 sachet in, 2 water in, 3 done
   var coverUp = false;
+  var coverDy = 0;            // food cover offset, steps toward 0 or -13
+  var shake = 0;              // frames left of the sachet being emptied
+  var mwave = 0;              // frames left of the microwave running
+  var spark = null;           // { x, y, n } tap flash on a background object
   var watch = null;           // { start, base } while at the window
   var litWindows = 0;
   var parcelOpen = false;
@@ -134,6 +138,11 @@
       rect(hint[0] - 1, y, hint[0] + 1, y, C.red);
       px(hint[0], y + 1, C.red);
     }
+    if (shake > 0) {
+      // sachet tipped over the mug, powder falling
+      rect(26, 37, 29, 40, C.ink); rect(27, 38, 28, 39, C.wood);
+      px(27 + (shake % 2), 41, C.brown); px(28 - (shake % 2), 42, C.brown);
+    }
     if (coffee.step === 1) { px(27, 43, C.brown); px(28, 43, C.brown); }
     if (coffee.step >= 2) rect(26, 44, 29, 44, C.brown);
     if (coffee.step === 2) {
@@ -210,10 +219,30 @@
 
   function drawWindow() {
     if (cond.night) drawNight();
-    // brake lights on a stalled EDSA
-    if (!cond.night && !still && frame % 4 < 2) { px(35, 32, C.dark); px(51, 32, C.dark); }
+    if (!cond.night && !still) {
+      // clouds drift across both panes
+      rect(35, 11, 39, 12, C.sky); rect(50, 12, 55, 13, C.sky);
+      var drift = (frame >> 3) % 26;
+      [[35, 11, 5], [50, 12, 6]].forEach(function (c) {
+        for (var i = 0; i < c[2]; i++) {
+          var x = 33 + (c[0] - 33 + i + drift) % 26;
+          px(x, c[1], C.white); px(x, c[1] + 1, C.white);
+        }
+      });
+      // a stalled EDSA: cars creep one pixel at a time, brake lights blinking
+      rect(33, 31, 58, 33, C.dark);
+      var creep = Math.floor(frame / 10) % 26;
+      [[35, C.red], [38, C.white], [41, C.red], [44, C.yellow], [48, C.yellow], [51, C.red], [55, C.white]].forEach(function (c, i) {
+        var braking = c[1] === C.red && (frame + i * 3) % 8 < 2;
+        px(33 + (c[0] - 33 + creep) % 26, 32, braking ? C.ink : c[1]);
+      });
+      rect(45, 9, 46, 33, C.white);
+    }
     for (var i = 0; i < Math.min(litWindows, LIGHTS.length); i++) px(LIGHTS[i][0], LIGHTS[i][1], C.yellow);
-    if (cond.parol) drawParol();
+    if (cond.parol) {
+      drawParol();
+      if (!still && frame % 6 < 3) px(52, 12, C.yellow);
+    }
     if (P.rainy()) {
       var f = still ? 0 : frame;
       for (var y = 9; y <= 30; y++) {
@@ -225,21 +254,55 @@
     }
   }
 
+  // Small things that keep the room alive between taps.
+  function drawAmbient() {
+    if (still) return;
+    // aircon: LED blink and air coming off the louver
+    if (frame % 12 === 0) px(23, 5, C.white);
+    var a = frame % 4;
+    px(7 + a * 2, 12, C.grey); px(15 + a * 2, 13, C.grey); px(21 - a, 12, C.grey);
+    // water dispenser: a bubble rises in the bottle now and then
+    var b = frame % 36;
+    if (b < 4 && coffee.pour === 0) px(7, 38 - b, C.white);
+    // microwave: running during lunch rush, or for a few seconds after a tap
+    if (mwave > 0 || cond.lunch) {
+      rect(40, 42, 50, 46, frame % 2 ? C.yellow : C.orange);
+      var plate = [0, 1, 2, 1][frame % 4];
+      rect(43 + plate, 45, 46 + plate, 45, C.ink);
+      rect(44 + plate, 44, 45 + plate, 44, C.brown);
+      rect(54, 41, 57, 42, frame % 4 < 2 ? C.green : C.white);
+    }
+  }
+
+  // Tap flash on a background object: a plus sign that opens out, two frames.
+  function drawSpark() {
+    if (!spark) return;
+    var r = spark.n === 2 ? 2 : 4, c = spark.n === 2 ? C.white : C.yellow;
+    px(spark.x - r, spark.y, c); px(spark.x + r, spark.y, c);
+    px(spark.x, spark.y - r, c); px(spark.x, spark.y + r, c);
+    if (spark.n === 1) { px(spark.x - 3, spark.y - 3, c); px(spark.x + 3, spark.y - 3, c); px(spark.x - 3, spark.y + 3, c); px(spark.x + 3, spark.y + 3, c); }
+  }
+
+  var CENTER = { microwave: [48, 44], ref: [76, 55], aircon: [45, 89], bulletin: [12, 22], clock: [76, 16] };
+
   function draw() {
     if (!ctx) return;
     ctx.clearRect(0, 0, 90, 130);
     drawWindow();
     if (cond.lunch) drawQueue();
-    if (cond.merienda && !coverUp) drawSparkle();
+    if (cond.merienda && coverDy === 0) drawSparkle();
     drawCoffee();
-    if (coverUp) { drawFood(); drawCover(-13); } else drawCover(0);
+    if (coverDy < 0) drawFood();
+    drawCover(coverDy);
+    drawAmbient();
+    drawSpark();
   }
 
   // ---- stations -------------------------------------------------------------
 
   function tapCoffee(spot) {
     if (spot === "sachet" && (coffee.step === 0 || coffee.step === 3)) {
-      coffee.step = 1; coffee.stirs = 0;
+      coffee.step = 1; coffee.stirs = 0; shake = still ? 0 : 3;
       blip(900, 500, 50);
     } else if (spot === "dispenser" && coffee.step === 1) {
       coffee.step = 2; coffee.pour = 4;
@@ -260,6 +323,7 @@
 
   function tapMerienda() {
     coverUp = !coverUp;
+    if (still) coverDy = coverUp ? -13 : 0;
     if (coverUp) {
       var m = meriendaOfTheDay();
       if (m) {
@@ -337,6 +401,9 @@
   }
 
   function tapDetail(object) {
+    if (!still && CENTER[object]) spark = { x: CENTER[object][0], y: CENTER[object][1], n: 2 };
+    if (object === "microwave" && mwave === 0) { mwave = 16; blip(220, 200, 300); }
+    draw();
     var l = line("background", object);
     if (l) P.say(l.text);
   }
@@ -370,6 +437,7 @@
     used = {};
     coffee = { step: 0, stirs: 0, pour: 0 };
     coverUp = false;
+    coverDy = 0; shake = 0; mwave = 0; spark = null;
     watch = null;
     litWindows = 0;
     parcelOpen = false;
@@ -418,6 +486,11 @@
       if (frame % 8 === 0) applyConditions();
       updateWatch();
       if (coffee.pour > 0) coffee.pour--;
+      if (shake > 0) shake--;
+      if (mwave > 0 && --mwave === 0) blip(1500, 1400, 180);   // ding
+      if (spark && --spark.n < 0) spark = null;
+      var goal = coverUp ? -13 : 0;
+      if (coverDy !== goal) coverDy = coverUp ? Math.max(goal, coverDy - 5) : Math.min(goal, coverDy + 5);
       if (!still) frame++;
       draw();
     }, 250);

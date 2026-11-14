@@ -91,6 +91,47 @@ body {
 .door-btn:focus-visible { outline: 2px dashed var(--ink); outline-offset: 2px; }
 body[data-view="cooldown"] .door .room-art { filter: brightness(0.72); }
 
+/* Door: the light behind the glass wavers while the pantry is open,
+   and the closed sign settles after it is hung. */
+.door-glow {
+  position: absolute;
+  left: 36.7%;
+  top: 24.6%;
+  width: 26.7%;
+  height: 17.7%;
+  background: #f4f0e6;
+  opacity: 0;
+  pointer-events: none;
+}
+body[data-view="landing"] .door-glow { animation: glow 2.4s steps(1) infinite; }
+body[data-view="cooldown"] .door-glow { background: #1f1a24; opacity: 0.45; }
+@keyframes glow {
+  0%, 100% { opacity: 0; }
+  40% { opacity: 0.18; }
+  55% { opacity: 0.06; }
+  70% { opacity: 0.22; }
+}
+body[data-view="cooldown"] .sign { animation: sway 1.2s steps(1) 1; transform-origin: 50% 0; }
+@keyframes sway {
+  0% { transform: translateX(-1.1%); }
+  25% { transform: translateX(1.1%); }
+  50% { transform: translateX(-0.6%); }
+  75% { transform: translateX(0.6%); }
+  100% { transform: none; }
+}
+
+/* The receipt prints from the top, a strip at a time. */
+.receipt:not([hidden]) .slip canvas { animation: print 0.9s steps(9) 1; }
+@keyframes print {
+  from { clip-path: inset(0 0 100% 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-view="landing"] .door-glow,
+  body[data-view="cooldown"] .sign,
+  .receipt:not([hidden]) .slip canvas { animation: none; }
+}
+
 /* Wall clock hands, drawn on the art grid. */
 .hands {
   position: absolute;

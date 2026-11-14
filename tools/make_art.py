@@ -140,6 +140,77 @@ def sign():
     text(3, 10, "CLOSED", 15)
 
 
+def lidbox(ox, oy, op, lid, body, content):
+    box(ox + 2, oy + 8, ox + 13, oy + 14, body)
+    if op:
+        R(ox + 3, oy + 9, ox + 12, oy + 9, content)
+        box(ox + 4, oy + 2, ox + 15, oy + 4, lid)
+    else:
+        box(ox + 1, oy + 6, ox + 14, oy + 8, lid)
+
+
+# Eight things in the ref, 16x16 each. Left column closed, right column open.
+def ref_items():
+    canvas(32, 128, CLEAR)
+    for op in (0, 1):
+        ox = op * 16
+        # 0 DO NOT EAT
+        oy = 0
+        lidbox(ox, oy, op, 15, 8, 5)
+        R(ox + 4, oy + 10, ox + 11, oy + 12, 17); R(ox + 5, oy + 11, ox + 10, oy + 11, 15)
+        # 1 adobo, no label
+        oy = 16
+        lidbox(ox, oy, op, 13, 7, 5)
+        for x, y in [(5, 11), (9, 12), (7, 13), (11, 10)]:
+            P(ox + x, oy + y, 5)
+        # 2 a name and a date from October
+        oy = 32
+        lidbox(ox, oy, op, 18, 8, 16)
+        R(ox + 4, oy + 10, ox + 8, oy + 13, 17); R(ox + 5, oy + 11, ox + 7, oy + 11, 20); P(ox + 5, oy + 12, 20)
+        # 3 cake box
+        oy = 48
+        if op:
+            box(ox + 1, oy + 8, ox + 14, oy + 14, 8)
+            box(ox + 1, oy + 1, ox + 14, oy + 3, 9)
+            R(ox + 6, oy + 6, ox + 9, oy + 7, 17); R(ox + 7, oy + 5, ox + 8, oy + 5, 17); P(ox + 8, oy + 4, 15)
+            R(ox + 7, oy + 9, ox + 8, oy + 13, 16)
+        else:
+            box(ox + 1, oy + 5, ox + 14, oy + 14, 8)
+            R(ox + 7, oy + 6, ox + 8, oy + 13, 16); R(ox + 2, oy + 9, ox + 13, oy + 9, 16)
+            R(ox + 6, oy + 4, ox + 9, oy + 5, 16)
+        # 4 FINANCE
+        oy = 64
+        lidbox(ox, oy, op, 11, 9, 20)
+        R(ox + 4, oy + 10, ox + 11, oy + 12, 8)
+        for x in (5, 7, 9):
+            P(ox + x, oy + 11, 0)
+        # 5 water bottle with masking tape
+        oy = 80
+        box(ox + 5, oy + 4, ox + 10, oy + 14, 13)
+        R(ox + 6, oy + 6, ox + 6, oy + 12, 12)
+        R(ox + 5, oy + 8, ox + 10, oy + 10, 8); R(ox + 7, oy + 9, ox + 8, oy + 9, 0)
+        if op:
+            box(ox + 11, oy + 11, ox + 14, oy + 14, 8)
+            R(ox + 7, oy + 3, ox + 8, oy + 3, 0)
+        else:
+            box(ox + 6, oy + 1, ox + 9, oy + 4, 8)
+        # 6 ice cream tub
+        oy = 96
+        box(ox + 2, oy + 7, ox + 13, oy + 14, 17)
+        R(ox + 3, oy + 10, ox + 12, oy + 11, 15)
+        if op:
+            box(ox + 4, oy + 0, ox + 15, oy + 2, 8)
+            R(ox + 6, oy + 5, ox + 8, oy + 7, 23); P(ox + 5, oy + 4, 23); P(ox + 9, oy + 4, 23); P(ox + 7, oy + 4, 14)
+        else:
+            box(ox + 1, oy + 5, ox + 14, oy + 7, 8)
+        # 7 someone's lunch, still warm
+        oy = 112
+        lidbox(ox, oy, op, 16, 8, 7)
+        steam = [(5, 5), (6, 3), (8, 6), (7, 1), (10, 6)] if op else [(5, 4), (6, 2), (10, 4), (9, 3)]
+        for x, y in steam:
+            P(ox + x, oy + y, 9)
+
+
 def room():
     canvas(90, 130, 1)
     # wall and floor
@@ -231,6 +302,13 @@ def room():
     R(69, 38, 69, 43, 11); R(69, 48, 69, 58, 11)
     P(77, 34, 15); P(80, 36, 13)
     R(75, 50, 80, 56, 17); R(76, 52, 79, 52, 20); R(76, 54, 78, 54, 20)
+
+    # loaf of bread on top of the ref
+    box(69, 25, 82, 30, 7)
+    R(70, 26, 81, 26, 19)
+    for x in (72, 75, 78):
+        R(x, 27, x, 29, 20)
+    R(81, 27, 82, 29, 8)
 
     # table
     R(11, 97, 13, 118, 5); R(47, 97, 49, 118, 5)
@@ -422,6 +500,8 @@ if __name__ == "__main__":
         write_png(os.path.join(ROOT, f"assets/sprites/{name}.png"), cursor_grid(art), scale=2)
     write_png(os.path.join(ROOT, "assets/sprites/bubble.png"),
               [[KEY[ch] for ch in r.ljust(16, ".")] for r in BUBBLE.strip("\n").split("\n")])
+    ref_items()
+    write_png(os.path.join(ROOT, "assets/sprites/ref_items.png"), g)
     preview = os.environ.get("PREVIEW_DIR")
     door()
     write_png(os.path.join(ROOT, "assets/sprites/door.png"), g)

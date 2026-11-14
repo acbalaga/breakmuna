@@ -26,7 +26,8 @@
   var spark = null;           // { x, y, n } tap flash on a background object
   var mini = null;            // which mini panel is open: aircon, ref, bulletin, microwave
   var ac = { temp: 18, idle: 0 };
-  var mw = { set: 0, endAt: 0, queue: 0, queueAt: 0 };
+  var mw = { set: 0, secs: 0, endAt: 0, queue: 0, queueAt: 0, item: "bread" };
+  var secret = { code: false, taken: false };   // the hidden case, see the secret pool in data/copy.js
   var watch = null;           // { start, base } while at the window
   var litWindows = 0;
   var parcelOpen = false;
@@ -65,7 +66,10 @@
 
   // Said once on entering the room, when the day or hour has something to say.
   function greet() {
-    var l = P.choose(P.lines(function (x) { return x.pool === "condition" && !x.object; }), used);
+    var lines = P.lines(function (x) { return x.pool === "condition" && !x.object; });
+    // on a weekend the pantry always says why you are here
+    var weekend = lines.filter(function (x) { return x.when.indexOf("weekend") !== -1 && !used[x.id]; });
+    var l = P.choose(weekend.length ? weekend : lines, used);
     if (l) P.say(l.text);
   }
 
@@ -451,43 +455,68 @@
       show: function () { var l = $("ac-lcd"); if (l) l.textContent = ac.temp + "\u00B0C"; },
       tick: function () {
         if (ac.temp === 18) return;
-        if (++ac.idle < 10) return;
+        ac.idle++;
+        if (ac.temp === 25 && ac.idle === 5 && !secret.code && mini === "aircon") {
+          secret.code = true;
+          blip(300, 900, 200);
+          P.say(copyById("secret-code"));
+        }
+        if (ac.idle < 12) return;
         ac.temp += ac.temp > 18 ? -1 : 1;
         MINI.aircon.show();
         if (ac.temp === 18) {
           blip(500, 400, 120);
-          var l = (window.PANTRY_COPY || []).filter(function (x) { return x.id === "bg-14"; })[0];
-          if (l && mini === "aircon") P.say(l.text);
+          if (mini === "aircon") P.say(copyById("bg-14"));
         }
       }
     },
 
-    // Open the ref and read what is on each container.
+    // Open the ref. Each thing inside opens for a moment and reads its label.
     ref: {
       label: "Inside the ref",
       build: function (body) {
-        var shelves = node("div", "shelves");
-        for (var i = 0; i < 8; i++) {
-          var b = node("button", "baon c" + [1, 2, 4, 3, 2, 3, 1, 4][i]);
-          b.setAttribute("aria-label", "Container " + (i + 1));
-          b.addEventListener("click", function (e) {
-            if (!active()) return;
-            var c = e.currentTarget;
-            if (!c.dataset.line) {
-              var l = P.choose(P.lines(function (x) { return x.pool === "ref_item"; }), used);
-              c.dataset.line = l ? l.text : " ";
-              c.classList.add("seen");
-            }
-            blip(300, 260, 60);
-            if (c.dataset.line.trim()) P.say(c.dataset.line);
+        var inside = node("div", "ref-inside");
+        var items = P.lines(function (x) { return x.pool === "ref_item"; });
+        [[0, 5, 1, 3], [4, 2, 6, 7]].forEach(function (row) {
+          var shelf = node("div", "shelf");
+          row.forEach(function (n) {
+            var it = items.filter(function (x) { return x.sprite === n; })[0];
+            var b = node("button", "baon");
+            b.style.setProperty("--row", n);
+            b.setAttribute("aria-label", it ? it.text : "Container");
+            var october = n === 2;
+            if (october && secret.taken) b.classList.add("gone");
+            if (october && secret.code && !secret.taken && !counts.solved) b.classList.add("glint");
+            b.addEventListener("click", function () {
+              if (!active()) return;
+              if (october && secret.code && !secret.taken && !counts.solved) {
+                secret.taken = true;
+                if (!mw.endAt && !mw.queue) mw.item = "october";
+                b.classList.remove("glint");
+                b.classList.add("gone");
+                blip(400, 700, 120);
+                P.say(copyById("secret-take"));
+                return;
+              }
+              b.classList.remove("open");
+              void b.offsetWidth;            // restart the hop
+              b.classList.add("open");
+              clearTimeout(b._t);
+              b._t = setTimeout(function () { b.classList.remove("open"); }, 1400);
+              blip(300, 260, 60);
+              if (it) P.say(it.text);
+            });
+            shelf.appendChild(b);
           });
-          shelves.appendChild(b);
-        }
-        body.appendChild(shelves);
+          inside.appendChild(shelf);
+        });
+        for (var i = 0; i < 3; i++) inside.appendChild(node("span", "mist m" + i));
+        body.appendChild(inside);
       }
     },
 
     // Unpin the notices one at a time. Each pile is two deep.
+    // Under the first pile there is always a handwritten scrap.
     bulletin: {
       label: "Bulletin board",
       build: function (body) {
@@ -513,18 +542,45 @@
             });
             pile.insertBefore(note, pile.firstChild);
           }
+          if (i === 0) {
+            var scrap = node("button", "note scrap");
+            scrap.setAttribute("aria-label", "Handwritten scrap");
+            scrap.addEventListener("click", function () {
+              if (!active()) return;
+              blip(500, 600, 60);
+              P.say(copyById("secret-note"));
+            });
+            pile.insertBefore(scrap, pile.firstChild);
+          }
           board.appendChild(pile);
         }
         body.appendChild(board);
       }
     },
 
-    // Set a time, press start, wait for the ding. At lunch there is a queue first.
+    // Pick what goes in, set a time, press start, wait for the ding.
+    // At lunch there is a queue first.
     microwave: {
       label: "Microwave",
       build: function (body) {
+        var items = node("div", "mw-items");
+        var m = meriendaOfTheDay();
+        var choices = [["bread", "Bread"], ["merienda", m ? m.item : "Merienda"]];
+        if (secret.taken && !counts.solved) choices.push(["october", "October baon"]);
+        choices.forEach(function (c) {
+          var b = key(c[1], "Heat: " + c[1], function () {
+            if (mw.endAt || mw.queue) return;
+            mw.item = c[0];
+            blip(700, 700, 40);
+            MINI.microwave.show();
+          });
+          b.dataset.item = c[0];
+          items.appendChild(b);
+        });
         var box = node("div", "mw"), win = node("div", "mw-window"), side = node("div", "mw-side"), lcd = node("div", "lcd");
         win.id = "mw-window"; lcd.id = "mw-lcd";
+        var food = node("div", "mw-food"); food.id = "mw-food";
+        win.appendChild(food);
         win.appendChild(node("div", "mw-plate"));
         side.appendChild(lcd);
         side.appendChild(key("+10 s", "Add ten seconds", function () {
@@ -536,11 +592,13 @@
         side.appendChild(key("Start", "Start", function () {
           if (mw.endAt || mw.queue || !mw.set) return;
           blip(600, 600, 60);
+          mw.secs = mw.set;
           if (cond.lunch) { mw.queue = 3; mw.queueAt = P.now(); }
           else mw.endAt = P.now() + mw.set * 1000;
           MINI.microwave.show();
         }));
-        box.appendChild(win); box.appendChild(side); body.appendChild(box);
+        box.appendChild(win); box.appendChild(side);
+        body.appendChild(items); body.appendChild(box);
         MINI.microwave.show();
       },
       show: function () {
@@ -549,9 +607,36 @@
         if (mw.queue) lcd.textContent = "Queue " + mw.queue;
         else lcd.textContent = mmss(mw.endAt ? Math.max(0, Math.ceil((mw.endAt - P.now()) / 1000)) : mw.set);
         win.classList.toggle("running", !!mw.endAt);
+        $("mw-food").className = "mw-food " + mw.item;
+        var bs = document.querySelectorAll(".mw-items .ctl");
+        for (var i = 0; i < bs.length; i++) bs[i].setAttribute("aria-pressed", String(bs[i].dataset.item === mw.item));
       }
     }
   };
+
+  function copyById(id) {
+    var l = (window.PANTRY_COPY || []).filter(function (x) { return x.id === id; })[0];
+    return l ? l.text : "";
+  }
+
+  // What the microwave says when it is done, by what went in and for how long.
+  function microwaveDone() {
+    if (mw.item === "october") {
+      if (mw.secs === 50) {
+        counts.solved = true;
+        save();
+        mw.item = "bread";
+        blip(600, 1200, 300);
+        P.say(copyById("secret-solved"));
+        if (mini === "microwave") openMini("microwave");
+      } else P.say(copyById("secret-wrong"));
+      return;
+    }
+    var l = P.lines(function (x) {
+      return x.pool === "microwave_result" && x.item === mw.item && mw.secs >= x.min && mw.secs <= x.max;
+    })[0];
+    if (l) P.say(l.text);
+  }
 
   // Runs every frame whether or not the panel is open, so a started microwave still finishes.
   function tickMini() {
@@ -565,8 +650,7 @@
       if (P.now() >= mw.endAt) {
         mw.endAt = 0; mw.set = 0; mwave = 0;
         blip(1500, 1400, 180);   // ding
-        var l = line("background", "microwave");
-        if (l) P.say(l.text);
+        microwaveDone();
       }
     }
     MINI.microwave.show();
@@ -621,7 +705,8 @@
     coverDy = 0; shake = 0; mwave = 0; spark = null;
     closeMini();
     ac = { temp: 18, idle: 0 };
-    mw = { set: 0, endAt: 0, queue: 0, queueAt: 0 };
+    mw = { set: 0, secs: 0, endAt: 0, queue: 0, queueAt: 0, item: "bread" };
+    secret = { code: false, taken: false };
     watch = null;
     litWindows = 0;
     parcelOpen = false;

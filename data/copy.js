@@ -2,7 +2,8 @@
 //
 // Shape: id, pool, text, optional object, optional when.
 //   pool    coffee, merienda, parcel, background, condition, door, receipt
-//           (plus four small extras: landing, unearned, caption, ref_item)
+//           (plus extras outside the 181: landing, unearned, caption, ref_item,
+//           microwave_result, secret)
 //   object  background lines: microwave, ref, aircon, bulletin, clock.
 //           condition lines: the object that speaks the line (coffee, microwave,
 //           ref, bulletin). A condition line with no object is said on entering the room.
@@ -174,8 +175,8 @@ window.PANTRY_COPY = [
   { id: "cond-31", pool: "condition", when: ["ber_months"], object: "bulletin", text: "Christmas party: attendance is voluntary. A headcount is being taken." },
   { id: "cond-32", pool: "condition", when: ["ber_months"], text: "A parol has been hung on the window. It was approved in one meeting, which is a record." },
 
-  { id: "cond-33", pool: "condition", when: ["weekend"], text: "It is the weekend. The pantry would like to know why you are here." },
-  { id: "cond-34", pool: "condition", when: ["weekend"], text: "The office is empty. The aircon is running for you alone." },
+  { id: "cond-33", pool: "condition", when: ["weekend"], text: "You are here because the deadline is Monday. It was Monday all along." },
+  { id: "cond-34", pool: "condition", when: ["weekend"], text: "You came in to finish one thing. It has become four things." },
   { id: "cond-35", pool: "condition", when: ["weekend"], object: "microwave", text: "No queue. This is what the microwave is like when nobody is watching." },
   { id: "cond-36", pool: "condition", when: ["weekend"], object: "coffee", text: "Weekend coffee. Nobody restocked on Friday." },
 
@@ -226,6 +227,7 @@ window.PANTRY_COPY = [
   // ---------------------------------------------------------------- extras, outside the 181
   // Landing line (open door).
   { id: "landing-01", pool: "landing", text: "Pantry open. Break limit: 5 minutes. Tap the door." },
+  { id: "landing-02", pool: "landing", when: ["weekend"], text: "Pantry open. It is the weekend. The pantry would like to know why you are here." },
 
   // Receipt line the visitor did not earn.
   { id: "unearned-01", pool: "unearned", label: "Meetings avoided", value: "1" },
@@ -237,15 +239,30 @@ window.PANTRY_COPY = [
   { id: "unearned-07", pool: "unearned", label: "Weekends worked", value: "1", when: ["weekend"] },
   { id: "unearned-08", pool: "unearned", label: "Lunches out planned", value: "1", when: ["payday"] },
 
-  // What is inside the ref, one per container tapped.
-  { id: "ref-item-01", pool: "ref_item", text: "Label: DO NOT EAT. Underlined twice." },
-  { id: "ref-item-02", pool: "ref_item", text: "No label. Contents: adobo, by smell." },
-  { id: "ref-item-03", pool: "ref_item", text: "Label: a name and a date. The date is from October." },
-  { id: "ref-item-04", pool: "ref_item", text: "A cake box. Inside: one slice and a plastic knife." },
-  { id: "ref-item-05", pool: "ref_item", text: "Label: FINANCE. It is unclear if this is ownership or a warning." },
-  { id: "ref-item-06", pool: "ref_item", text: "A water bottle with a name on masking tape. The tape is older than the bottle." },
-  { id: "ref-item-07", pool: "ref_item", text: "Ice cream tub. Contents: fish." },
-  { id: "ref-item-08", pool: "ref_item", text: "Someone's lunch, still warm. The ref is working harder because of it." },
+  // What is inside the ref. `sprite` is the row in assets/sprites/ref_items.png.
+  { id: "ref-item-01", pool: "ref_item", sprite: 0, text: "Label: DO NOT EAT. Underlined twice." },
+  { id: "ref-item-02", pool: "ref_item", sprite: 1, text: "No label. Contents: adobo, by smell." },
+  { id: "ref-item-03", pool: "ref_item", sprite: 2, text: "Label: a name and a date. The date is from October." },
+  { id: "ref-item-04", pool: "ref_item", sprite: 3, text: "A cake box. Inside: one slice and a plastic knife." },
+  { id: "ref-item-05", pool: "ref_item", sprite: 4, text: "Label: FINANCE. It is unclear if this is ownership or a warning." },
+  { id: "ref-item-06", pool: "ref_item", sprite: 5, text: "A water bottle with a name on masking tape. The tape is older than the bottle." },
+  { id: "ref-item-07", pool: "ref_item", sprite: 6, text: "Ice cream tub. Contents: fish." },
+  { id: "ref-item-08", pool: "ref_item", sprite: 7, text: "Someone's lunch, still warm. The ref is working harder because of it." },
+
+  // What comes out of the microwave. `item` is what went in, min and max are seconds.
+  { id: "mw-bread-1", pool: "microwave_result", item: "bread", min: 10, max: 10, text: "The bread is warm outside and cold inside. This is the standard result." },
+  { id: "mw-bread-2", pool: "microwave_result", item: "bread", min: 20, max: 30, text: "The bread is warm all the way through. Eat it within one minute." },
+  { id: "mw-bread-3", pool: "microwave_result", item: "bread", min: 40, max: 120, text: "The bread has hardened. It may now be used as a paperweight." },
+  { id: "mw-merienda-1", pool: "microwave_result", item: "merienda", min: 10, max: 20, text: "Lukewarm. The microwave did the minimum." },
+  { id: "mw-merienda-2", pool: "microwave_result", item: "merienda", min: 30, max: 60, text: "Heated through. This is rare and should be reported." },
+  { id: "mw-merienda-3", pool: "microwave_result", item: "merienda", min: 70, max: 120, text: "The edges are bubbling. The center is still cold." },
+
+  // The hidden case. Bulletin scrap, then aircon at 25, then the October baon, then 0:50.
+  { id: "secret-note", pool: "secret", text: "A handwritten scrap, unsigned. To whoever keeps setting it to 18: try 25, and wait." },
+  { id: "secret-code", pool: "secret", text: "25. Something rattles in the remote. Taped inside the battery cover: October baon, 0:50." },
+  { id: "secret-take", pool: "secret", text: "You take the October baon out of the ref. Nobody stops you." },
+  { id: "secret-wrong", pool: "secret", text: "The October baon is unchanged. It has survived worse." },
+  { id: "secret-solved", pool: "secret", text: "0:50. The October baon has been reheated at last. Case closed." },
 
   // Optional post caption for the copy button.
   { id: "caption-01", pool: "caption", text: "Five minutes in the pantry. It is on record." }

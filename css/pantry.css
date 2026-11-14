@@ -1,0 +1,78 @@
+/* Break Muna. Layout, pixel rendering, dialog box. */
+:root {
+  --ink: #1f1a24;
+  --paper: #f4f0e6;
+  --dialog-h: 96px;
+  /* Room is 90 by 130 art pixels. 4 CSS px per art pixel at 360 px wide. */
+  --room-w: min(100vw, 540px, calc((100dvh - var(--dialog-h)) * 90 / 130));
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--ink);
+}
+
+body {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  color: var(--ink);
+  -webkit-text-size-adjust: 100%;
+}
+
+.pantry {
+  width: var(--room-w);
+  margin: 0 auto;
+  cursor: url("../assets/cursors/mug.png") 2 6, default;
+}
+
+.room {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 90 / 130;
+  overflow: hidden;
+}
+
+.room-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Every interactive object is a real button laid over the art. */
+.spot {
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: inherit;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.spot:focus-visible {
+  outline: 2px dashed var(--paper);
+  outline-offset: -2px;
+}
+.spot[data-cursor="spoon"]  { cursor: url("../assets/cursors/spoon.png") 2 2, pointer; }
+.spot[data-cursor="fork"]   { cursor: url("../assets/cursors/fork.png") 8 0, pointer; }
+.spot[data-cursor="finger"] { cursor: url("../assets/cursors/finger.png") 9 0, pointer; }
+.spot[data-cursor="eyes"]   { cursor: url("../assets/cursors/eyes.png") 16 12, pointer; }
+
+/* RPG dialog box under the room. */
+.dialog {
+  min-height: var(--dialog-h);
+  padding: 12px 14px;
+  background: var(--paper);
+  border: 4px solid var(--ink);
+  box-shadow: inset 0 0 0 2px #8c8c94;
+  font-size: 15px;
+  line-height: 1.4;
+  cursor: default;
+}
+.dialog[hidden] { display: none; }

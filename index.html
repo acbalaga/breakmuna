@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Break Muna</title>
+<link rel="stylesheet" href="css/pantry.css">
+</head>
+<body>
+<main class="pantry">
+  <div class="room" id="room">
+    <img class="room-art" src="assets/sprites/room.png" width="90" height="130" alt="A small office pantry drawn in pixel art.">
+
+    <!-- Stations. Positions are percentages of the 90 by 130 art grid. -->
+    <button type="button" class="spot station" data-spot="coffee" data-cursor="spoon" aria-label="Coffee corner"
+      style="left:2.2%;top:23.8%;width:35.6%;height:15.4%"></button>
+    <button type="button" class="spot station" data-spot="merienda" data-cursor="fork" aria-label="Merienda tray"
+      style="left:15.6%;top:59.2%;width:27.8%;height:11.5%"></button>
+    <button type="button" class="spot station" data-spot="parcel" data-cursor="finger" aria-label="Parcel pile"
+      style="left:63.3%;top:70.8%;width:36.7%;height:23.8%"></button>
+    <button type="button" class="spot station" data-spot="window" data-cursor="eyes" aria-label="The window"
+      style="left:33.3%;top:4.6%;width:35.6%;height:24.6%"></button>
+
+    <!-- Background details, one line each. -->
+    <button type="button" class="spot detail" data-spot="microwave" aria-label="Microwave"
+      style="left:40%;top:29.2%;width:27.8%;height:9.2%"></button>
+    <button type="button" class="spot detail" data-spot="ref" aria-label="Ref"
+      style="left:72.2%;top:22.3%;width:26.7%;height:39.2%"></button>
+    <button type="button" class="spot detail" data-spot="aircon" aria-label="Aircon remote"
+      style="left:44.4%;top:63.8%;width:12.3%;height:7.7%"></button>
+    <button type="button" class="spot detail" data-spot="bulletin" aria-label="Bulletin board"
+      style="left:2.2%;top:10%;width:24.4%;height:13.8%"></button>
+    <button type="button" class="spot detail" data-spot="clock" aria-label="Wall clock"
+      style="left:74.4%;top:5.4%;width:20%;height:13.8%"></button>
+  </div>
+
+  <div class="dialog" id="dialog" role="status" aria-live="polite" hidden></div>
+</main>
+</body>
+</html>

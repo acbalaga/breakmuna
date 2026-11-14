@@ -164,17 +164,34 @@
     }
   }
 
-  // Long hand: one full turn over the break. Short red hand: seconds.
+  // The hands show the real time of day. The rim fills red, clockwise from 12,
+  // as the break runs out: a full red rim is 5:00.
   function drawHands(elapsed) {
     var ctx = el.hands.getContext("2d");
     ctx.clearRect(0, 0, 17, 17);
-    var secs = Math.floor(elapsed / 1000);
-    var a = (secs % 60) / 60 * 2 * Math.PI;
+
+    var part = Math.min(elapsed, BREAK_MS) / BREAK_MS * 2 * Math.PI;
     ctx.fillStyle = "#c8483c";
-    line(ctx, 8, 8, 8 + Math.round(Math.sin(a) * 3), 8 - Math.round(Math.cos(a) * 3));
-    a = Math.min(elapsed, BREAK_MS) / BREAK_MS * 2 * Math.PI;
+    for (var y = 0; y < 17; y++) {
+      for (var x = 0; x < 17; x++) {
+        var d = (x - 8) * (x - 8) + (y - 8) * (y - 8);
+        if (d <= 38 || d > 52) continue;                 // rim pixels only
+        var a = Math.atan2(x - 8, 8 - y);
+        if (a < 0) a += 2 * Math.PI;
+        if (a <= part && elapsed > 0) ctx.fillRect(x, y, 1, 1);
+      }
+    }
+
+    var now = new Date(P.now());
+    var mins = now.getMinutes() + now.getSeconds() / 60;
+    var hm = mins / 60 * 2 * Math.PI;
+    var hh = ((now.getHours() % 12) + mins / 60) / 12 * 2 * Math.PI;
     ctx.fillStyle = "#1f1a24";
-    line(ctx, 8, 8, 8 + Math.round(Math.sin(a) * 5), 8 - Math.round(Math.cos(a) * 5));
+    line(ctx, 8, 8, 8 + Math.round(Math.sin(hm) * 5), 8 - Math.round(Math.cos(hm) * 5));
+    ctx.fillStyle = "#55555e";
+    line(ctx, 8, 8, 8 + Math.round(Math.sin(hh) * 3), 8 - Math.round(Math.cos(hh) * 3));
+    ctx.fillStyle = "#1f1a24";
+    ctx.fillRect(8, 8, 1, 1);
   }
 
   // ---- tick ---------------------------------------------------------------

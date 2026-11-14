@@ -2,7 +2,7 @@
 //
 // Shape: id, pool, text, optional object, optional when.
 //   pool    coffee, merienda, parcel, background, condition, door, receipt
-//           (plus three small extras: landing, unearned, caption)
+//           (plus four small extras: landing, unearned, caption, ref_item)
 //   object  background lines: microwave, ref, aircon, bulletin, clock.
 //           condition lines: the object that speaks the line (coffee, microwave,
 //           ref, bulletin). A condition line with no object is said on entering the room.
@@ -236,6 +236,16 @@ window.PANTRY_COPY = [
   { id: "unearned-06", pool: "unearned", label: "Overtime filed", value: "0", when: ["overtime"] },
   { id: "unearned-07", pool: "unearned", label: "Weekends worked", value: "1", when: ["weekend"] },
   { id: "unearned-08", pool: "unearned", label: "Lunches out planned", value: "1", when: ["payday"] },
+
+  // What is inside the ref, one per container tapped.
+  { id: "ref-item-01", pool: "ref_item", text: "Label: DO NOT EAT. Underlined twice." },
+  { id: "ref-item-02", pool: "ref_item", text: "No label. Contents: adobo, by smell." },
+  { id: "ref-item-03", pool: "ref_item", text: "Label: a name and a date. The date is from October." },
+  { id: "ref-item-04", pool: "ref_item", text: "A cake box. Inside: one slice and a plastic knife." },
+  { id: "ref-item-05", pool: "ref_item", text: "Label: FINANCE. It is unclear if this is ownership or a warning." },
+  { id: "ref-item-06", pool: "ref_item", text: "A water bottle with a name on masking tape. The tape is older than the bottle." },
+  { id: "ref-item-07", pool: "ref_item", text: "Ice cream tub. Contents: fish." },
+  { id: "ref-item-08", pool: "ref_item", text: "Someone's lunch, still warm. The ref is working harder because of it." },
 
   // Optional post caption for the copy button.
   { id: "caption-01", pool: "caption", text: "Five minutes in the pantry. It is on record." }

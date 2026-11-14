@@ -64,6 +64,26 @@ body {
 .spot[data-cursor="finger"] { cursor: url("../assets/cursors/finger.png") 9 0, pointer; }
 .spot[data-cursor="eyes"]   { cursor: url("../assets/cursors/eyes.png") 16 12, pointer; }
 
+
+/* Where each button sits, as percentages of the 90 by 130 art grid. */
+[data-spot="dispenser"]  { left: 2.2%; top: 23.8%; width: 11.6%; height: 15.4%; }
+[data-spot="sachet"]     { left: 13.8%; top: 28.5%; width: 12.2%; height: 10.7%; }
+[data-spot="mug"]        { left: 26%; top: 26.5%; width: 12.2%; height: 12.7%; }
+[data-spot="merienda"]   { left: 15.6%; top: 59.2%; width: 27.8%; height: 11.5%; }
+[data-spot="parcel"]     { left: 63.3%; top: 70.8%; width: 36.7%; height: 23.8%; }
+[data-spot="window"]     { left: 33.3%; top: 4.6%; width: 35.6%; height: 24.6%; }
+[data-spot="cab1"]       { left: 0%; top: 41.5%; width: 17.2%; height: 13.8%; }
+[data-spot="cab2"]       { left: 17.2%; top: 41.5%; width: 17.2%; height: 13.8%; }
+[data-spot="cab3"]       { left: 34.4%; top: 41.5%; width: 17.8%; height: 13.8%; }
+[data-spot="cab4"]       { left: 52.2%; top: 41.5%; width: 17.8%; height: 13.8%; }
+[data-spot="cat"]        { left: 31.1%; top: 89.2%; width: 25.6%; height: 10.8%; }
+[data-spot="microwave"]  { left: 40%; top: 29.2%; width: 27.8%; height: 9.2%; }
+[data-spot="ref"]        { left: 72.2%; top: 22.3%; width: 26.7%; height: 39.2%; }
+[data-spot="aircon"]     { left: 44.4%; top: 63.8%; width: 12.3%; height: 7.7%; }
+[data-spot="bulletin"]   { left: 2.2%; top: 10%; width: 24.4%; height: 13.8%; }
+[data-spot="clock"]      { left: 74.4%; top: 5.4%; width: 20%; height: 13.8%; }
+[data-spot="unit"]       { left: 2.2%; top: 1.5%; width: 28.9%; height: 8.5%; }
+
 [hidden] { display: none !important; }
 
 /* Door: landing and cooldown. */
@@ -158,15 +178,15 @@ body[data-view="cooldown"] .sign { animation: sway 1.2s steps(1) 1; transform-or
   background: linear-gradient(90deg, rgba(13, 10, 20, 0.1) 0 50%, rgba(13, 10, 20, 0.5) 50% 100%);
 }
 .room.flicker .lights { animation: flicker 0.5s steps(1) 1; }
-.room.lights-off .lights { opacity: 0.78; background: #0d0a14; }
+.room.lights-off .lights { opacity: 0.78; background: #0d0a14; transition: opacity 0.3s steps(3); }
 @keyframes flicker {
   0%, 30% { opacity: 0.5; }
   15%, 45%, 100% { opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .room.flicker .lights { animation: none; }
+  .room.lights-off .lights { transition: none; }
 }
-
 
 /* Controls keep the system cursor so they stay obvious. */
 .ctl {
@@ -197,8 +217,8 @@ body[data-view="cooldown"] .sign { animation: sway 1.2s steps(1) 1; transform-or
   pointer-events: none;
 }
 
-/* Bubble wrap sheet from the open parcel. */
-.wrap {
+/* Panels that open over the room: the bubble wrap sheet and the mini panels. */
+.panel {
   position: absolute;
   left: 8px;
   right: 8px;
@@ -209,6 +229,8 @@ body[data-view="cooldown"] .sign { animation: sway 1.2s steps(1) 1; transform-or
   text-align: right;
   cursor: url("../assets/cursors/finger.png") 9 0, pointer;
 }
+.panel button { cursor: inherit; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.ctl.panel-close { min-height: 32px; padding: 2px 10px; cursor: pointer; }
 .wrap-grid {
   display: grid;
   grid-template-columns: repeat(7, 40px);
@@ -223,28 +245,12 @@ body[data-view="cooldown"] .sign { animation: sway 1.2s steps(1) 1; transform-or
   border: 0;
   background: url("../assets/sprites/bubble.png") 0 0 / 200% 100% no-repeat;
   image-rendering: pixelated;
-  cursor: inherit;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
 }
 .bubble:disabled { background-position: 100% 0; }
 .bubble:focus-visible { outline: 2px dashed var(--ink); outline-offset: -2px; }
-.ctl.wrap-close { min-height: 32px; padding: 2px 10px; }
 
 /* Mini panels: aircon remote, ref, bulletin board, microwave. */
-.mini {
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: 56px;
-  padding: 8px 8px 12px;
-  background: #c8c8c8;
-  border: 4px solid var(--ink);
-  text-align: right;
-  cursor: url("../assets/cursors/finger.png") 9 0, pointer;
-}
 .mini-body { margin-top: 6px; text-align: center; }
-.mini button { cursor: inherit; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .lcd {
   display: inline-block;
   min-width: 132px;
@@ -375,7 +381,7 @@ body[data-view="cooldown"] .sign { animation: sway 1.2s steps(1) 1; transform-or
   width: 40%;
   height: 8px;
   background: var(--ink);
-  box-shadow: 0 -8px 0 -0px #6b4a32 inset, 8px -8px 0 0 #6b4a32, 24px -8px 0 0 #6b4a32;
+  box-shadow: inset 0 -8px 0 #6b4a32, 8px -8px 0 #6b4a32, 24px -8px 0 #6b4a32;
 }
 .mw-items { display: flex; gap: 6px; justify-content: center; margin-bottom: 8px; }
 .mw-items .ctl { min-height: 40px; padding: 4px 8px; font-size: 13px; }

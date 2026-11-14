@@ -208,17 +208,6 @@ body[data-view="cooldown"] .sign { animation: sway 1.2s steps(1) 1; transform-or
   pointer-events: none;
 }
 
-.window-count {
-  position: absolute;
-  left: 34.4%;
-  top: 0.8%;
-  padding: 0 6px;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--paper);
-  background: var(--ink);
-}
-
 /* Bubble wrap sheet from the open parcel. */
 .wrap {
   position: absolute;

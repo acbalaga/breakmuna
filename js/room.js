@@ -244,11 +244,14 @@
       if (!still && frame % 6 < 3) px(52, 12, C.yellow);
     }
     if (P.rainy()) {
+      // rain falls: short streaks sliding down every third column
       var f = still ? 0 : frame;
-      for (var y = 9; y <= 30; y++) {
-        for (var x = 33; x <= 58; x++) {
-          if (x === 45 || x === 46) continue;
-          if ((x * 7 + y * 3 + f * 3) % 31 === 0) { px(x, y, C.white); }
+      for (var x = 33; x <= 58; x += 3) {
+        if (x === 45) continue;
+        for (var k = 0; k < 2; k++) {
+          var y = 9 + (x * 13 + k * 11 + f * 3) % 22;
+          px(x, y, C.grey);
+          if (y < 30) px(x, y + 1, C.white);
         }
       }
     }
@@ -339,7 +342,6 @@
   function tapWindow() {
     if (watch) { stopWatch(); return; }
     watch = { start: P.now(), base: counts.window || 0 };
-    $("window-count").hidden = false;
     updateWatch();
   }
 
@@ -351,14 +353,12 @@
       save();
     }
     litWindows = Math.floor(counts.window / 5);
-    $("window-count").textContent = counts.window + " s";
   }
 
   function stopWatch() {
     if (!watch) return;
     updateWatch();
     watch = null;
-    $("window-count").hidden = true;
   }
 
   function newSheet() {
@@ -443,7 +443,6 @@
     parcelOpen = false;
     $("wrap").hidden = true;
     $("wrap-grid").textContent = "";
-    $("window-count").hidden = true;
   }
 
   function init() {

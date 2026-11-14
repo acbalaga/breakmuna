@@ -1,0 +1,10 @@
+// Cloudflare Workers config. Serves the repo as static files, no Worker code.
+// Deploy command: npx wrangler deploy
+{
+  "name": "breakmuna",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": ".",
+    "not_found_handling": "404-page"
+  }
+}

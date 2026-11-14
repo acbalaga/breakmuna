@@ -124,6 +124,7 @@
     var spots = el.room.querySelectorAll(".spot");
     for (var i = 0; i < spots.length; i++) spots[i].disabled = !on;
     el.exit.disabled = !on;
+    $("sound").disabled = !on;
   }
 
   // Ends the break at the given time, stores the receipt, shows the closed door.

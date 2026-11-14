@@ -238,14 +238,9 @@ def room():
     box(8, 92, 52, 96, 7)
     R(9, 93, 51, 93, 19)
 
-    # merienda tray under its food cover
+    # merienda tray
     box(15, 89, 37, 91, 10)
-    for y0, y1, x0, x1 in [(88, 88, 16, 36), (85, 87, 17, 35), (83, 84, 19, 33), (82, 82, 22, 30)]:
-        for y in range(y0, y1 + 1):
-            for x in range(x0, x1 + 1):
-                P(x, y, 0 if x in (x0, x1) else (17 if (x + y) % 2 == 0 else 16))
-    R(22, 81, 30, 81, 0)
-    box(24, 78, 28, 81, 15)
+    # the food cover is drawn by js/room.js so it can lift
 
     # aircon remote
     box(41, 87, 49, 91, 8)
@@ -351,6 +346,67 @@ kwwwwwwkkwwwwwwk
 }
 
 
+ICONS = {
+    "exit": """
+................
+.......kkkkkkkk.
+.......kwwwwwwk.
+....k..kwwwwwwk.
+...kk..kwwwwwwk.
+..krkkkkkkwwwwk.
+.krrrrrrrkwwwwk.
+krrrrrrrrkwwnwk.
+.krrrrrrrkwwwwk.
+..krkkkkkkwwwwk.
+...kk..kwwwwwwk.
+....k..kwwwwwwk.
+.......kwwwwwwk.
+.......kkkkkkkk.
+""",
+    "sound_on": """
+................
+................
+......k.........
+.....kk....k....
+....kwk.....k...
+.kkkwwk..k..k...
+.kwwwwk...k..k..
+.kwwwwk...k..k..
+.kwwwwk...k..k..
+.kkkwwk..k..k...
+....kwk.....k...
+.....kk....k....
+......k.........
+""",
+    "sound_off": """
+................
+................
+......k.........
+.....kk.........
+....kwk.........
+.kkkwwk..r...r..
+.kwwwwk...r.r...
+.kwwwwk....r....
+.kwwwwk...r.r...
+.kkkwwk..r...r..
+....kwk.........
+.....kk.........
+......k.........
+""",
+}
+
+BUBBLE = """
+..dddd..........
+.dwwggd...dddd..
+dwwggggd.d....d.
+dwgggggd.d.dd.d.
+dggggggd.d.d..d.
+dggggggd.d....d.
+.dggggd...dddd..
+..dddd..........
+"""
+
+
 def cursor_grid(art):
     rows = [r.ljust(16, ".")[:16] for r in art.strip("\n").split("\n")]
     rows += ["." * 16] * (16 - len(rows))
@@ -362,6 +418,10 @@ if __name__ == "__main__":
     write_png(os.path.join(ROOT, "assets/sprites/room.png"), g)
     for name, art in CURSORS.items():
         write_png(os.path.join(ROOT, f"assets/cursors/{name}.png"), cursor_grid(art), scale=2)
+    for name, art in ICONS.items():
+        write_png(os.path.join(ROOT, f"assets/sprites/{name}.png"), cursor_grid(art), scale=2)
+    write_png(os.path.join(ROOT, "assets/sprites/bubble.png"),
+              [[KEY[ch] for ch in r.ljust(16, ".")] for r in BUBBLE.strip("\n").split("\n")])
     preview = os.environ.get("PREVIEW_DIR")
     door()
     write_png(os.path.join(ROOT, "assets/sprites/door.png"), g)

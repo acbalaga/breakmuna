@@ -14,6 +14,7 @@
 
   // r: { start, end, reopen, counts }
   P.receiptText = function (r) {
+    var c = r.counts || {};
     var date = new Date(r.start).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
     return [
       "BREAK MUNA",
@@ -23,6 +24,11 @@
       "Time in   " + clock(r.start),
       "Time out  " + clock(r.end),
       "Duration  " + duration(r.end - r.start),
+      "------------------------",
+      "Cups of coffee       " + (c.coffee || 0),
+      "Merienda of the day  " + (c.merienda || "unclaimed"),
+      "Bubbles popped       " + (c.bubbles || 0),
+      "Seconds at window    " + (c.window || 0),
       "------------------------",
       "Pantry reopens at " + clock(r.reopen)
     ].join("\n");

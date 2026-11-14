@@ -11,4 +11,16 @@
     }
   } catch (e) {}
   P.now = function () { return Date.now() + offset; };
+
+  // Local calendar day as a number. Same for everyone on the same date.
+  P.dayNumber = function () {
+    var d = new Date(P.now());
+    return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
+  };
+
+  // Rainy season is June to November. It rains more often than not.
+  P.rainy = function () {
+    var m = new Date(P.now()).getMonth();
+    return m >= 5 && m <= 10 && P.dayNumber() % 3 !== 0;
+  };
 })();

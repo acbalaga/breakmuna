@@ -27,7 +27,7 @@
   var mini = null;            // which mini panel is open: aircon, ref, bulletin, microwave
   var ac = { temp: 18, idle: 0 };
   var mw = { set: 0, secs: 0, endAt: 0, queue: 0, queueAt: 0, item: "bread" };
-  var secret = { code: false, taken: false, key: false };
+  var secret = { code: false, taken: false, slip: false, ring: false, key: false };
   var cab = [false, false, false, false];   // which cabinets are open
   var catAwake = 0;                         // frames the cat stays awake after a tap   // the hidden case, see the secret pool in data/copy.js
   var watch = null;           // { start, base } while at the window
@@ -321,6 +321,12 @@
       // padlock on the supply cabinet
       rect(48, 60, 50, 60, C.ink); px(48, 61, C.ink); px(50, 61, C.ink);
       rect(47, 62, 51, 65, C.ink); rect(48, 63, 50, 64, secret.key ? C.green : C.yellow);
+      if (secret.slip && !secret.key) {
+        // the slip on the counter, with its coffee ring once it has one
+        rect(33, 48, 36, 49, C.white);
+        if (secret.ring) px(34, 48, C.brown);
+      }
+      if (secret.key) { rect(33, 49, 36, 49, C.yellow); px(33, 48, C.yellow); px(36, 48, C.ink); }
     }
   }
 
@@ -410,8 +416,15 @@
         coffee.step = 3;
         counts.coffee = (counts.coffee || 0) + 1;
         save();
-        var l = line("coffee");
-        if (l) P.say(l.text);
+        if (secret.slip && !secret.ring && !counts.solved2) {
+          // the mug goes down on the slip
+          secret.ring = true;
+          blip(500, 900, 200);
+          P.say(copyById("secret2-ring"));
+        } else {
+          var l = line("coffee");
+          if (l) P.say(l.text);
+        }
       }
     }
     draw();
@@ -446,6 +459,13 @@
       save();
     }
     litWindows = Math.floor(counts.window / 5);
+    if (secret.ring && !secret.key && !counts.solved2 && secs >= 20) {
+      // the slip is processed while nobody is looking
+      secret.key = true;
+      blip(900, 1300, 200);
+      P.say(copyById("secret2-key"));
+      draw();
+    }
   }
 
   function stopWatch() {
@@ -490,12 +510,12 @@
     save();
     blip(420 + Math.random() * 200, 110, 70);
     if (!$("wrap-grid").querySelector(".bubble:not(:disabled)")) {
-      // a whole sheet popped: the supply cabinet key was taped underneath
-      var found = !secret.key && !counts.solved2;
-      if (found) secret.key = true;
+      // a whole sheet popped: a requisition slip for the supply key was taped underneath
+      var found = !secret.slip && !counts.solved2;
+      if (found) secret.slip = true;
       setTimeout(function () {
         if (parcelOpen) newSheet();
-        if (found) { blip(900, 1300, 200); P.say(copyById("secret2-key")); draw(); }
+        if (found) { blip(900, 1300, 200); P.say(copyById("secret2-slip")); draw(); }
       }, 500);
     }
   }
@@ -510,7 +530,11 @@
 
   function tapCabinet(i) {
     if (i === 3 && !counts.solved2) {
-      if (!secret.key) { blip(200, 180, 80); P.say(copyById("cab-4-locked")); return; }
+      if (!secret.key) {
+        blip(200, 180, 80);
+        P.say(copyById(secret.ring ? "cab-4-wait" : secret.slip ? "cab-4-slip" : "cab-4-locked"));
+        return;
+      }
       counts.solved2 = true;
       save();
       cab[3] = true;
@@ -825,7 +849,7 @@
     closeMini();
     ac = { temp: 18, idle: 0 };
     mw = { set: 0, secs: 0, endAt: 0, queue: 0, queueAt: 0, item: "bread" };
-    secret = { code: false, taken: false, key: false };
+    secret = { code: false, taken: false, slip: false, ring: false, key: false };
     cab = [false, false, false, false];
     catAwake = 0;
     watch = null;

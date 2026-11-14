@@ -271,9 +271,14 @@ window.PANTRY_COPY = [
   { id: "cab-4-locked", pool: "cabinet", object: "cab4", text: "Supply cabinet. Locked. The key is signed out in the log in the first cabinet." },
   { id: "cab-4-open", pool: "cabinet", object: "cab4", text: "Stirrers, sachets, tissue. Fully stocked. Nobody was told." },
 
-  // The second hidden case. Pop a whole sheet of bubble wrap for the key, then open the supply cabinet.
-  { id: "secret2-key", pool: "secret", text: "A key was taped under the bubble wrap. The tag says SUPPLY." },
+  // The second hidden case: key log, a full sheet of bubble wrap, one cup of coffee,
+  // 20 seconds at the window, then the supply cabinet.
+  { id: "secret2-slip", pool: "secret", text: "Taped under the bubble wrap: not the key. A requisition slip for it. Valid only with a coffee ring." },
+  { id: "secret2-ring", pool: "secret", text: "You set the mug on the slip. It has a coffee ring now, which makes it valid. Processing takes 20 seconds and cannot be watched." },
+  { id: "secret2-key", pool: "secret", text: "You looked away for 20 seconds. A key is on the counter. The tag says SUPPLY." },
   { id: "secret2-solved", pool: "secret", text: "The supply cabinet is open. It is full of stirrers. There were always stirrers. Case closed." },
+  { id: "cab-4-slip", pool: "cabinet", object: "cab4", text: "Locked. You have a slip, but it is not valid yet. It needs a coffee ring." },
+  { id: "cab-4-wait", pool: "cabinet", object: "cab4", text: "Locked. The slip is in processing. This does not happen while watched. Try the window." },
 
   // The building cat.
   { id: "cat-1", pool: "cat", text: "The building cat. Not on the payroll. Present every day." },

@@ -27,7 +27,9 @@
   var mini = null;            // which mini panel is open: aircon, ref, bulletin, microwave
   var ac = { temp: 18, idle: 0 };
   var mw = { set: 0, secs: 0, endAt: 0, queue: 0, queueAt: 0, item: "bread" };
-  var secret = { code: false, taken: false };   // the hidden case, see the secret pool in data/copy.js
+  var secret = { code: false, taken: false, slip: false, ring: false, key: false };
+  var cab = [false, false, false, false];   // which cabinets are open
+  var catAwake = 0;                         // frames the cat stays awake after a tap   // the hidden case, see the secret pool in data/copy.js
   var watch = null;           // { start, base } while at the window
   var litWindows = 0;
   var parcelOpen = false;
@@ -79,7 +81,9 @@
     function has(c) { return on.indexOf(c) !== -1; }
     room.classList.toggle("subdued", has("monday_morning") || has("weekend"));
     room.classList.toggle("half-lit", has("overtime"));
-    cond = { lunch: has("lunch_rush"), merienda: has("merienda_hour"), night: has("overtime"), parol: has("ber_months") };
+    var d = new Date(P.now()), mins = d.getHours() * 60 + d.getMinutes();
+    cond = { lunch: has("lunch_rush"), merienda: has("merienda_hour"), night: has("overtime"), parol: has("ber_months"),
+             dusk: mins >= 17 * 60 && mins < 18 * 60 + 30 };
     stirsNeeded = has("monday_morning") ? 5 : STIRS;
   }
 
@@ -224,9 +228,31 @@
     });
   }
 
+  // The hour before overtime: the sky goes orange and the towers go dark blue.
+  function drawDusk() {
+    rect(33, 9, 58, 14, C.orange); rect(33, 15, 58, 19, C.yellow); rect(33, 20, 58, 30, C.white);
+    px(49, 17, C.white); px(50, 17, C.white); px(49, 18, C.white); px(50, 18, C.white);   // low sun
+    [[33, 22, 38, 30], [39, 18, 44, 30], [47, 24, 51, 30], [52, 16, 58, 30]].forEach(function (b, i) {
+      rect(b[0], b[1], b[2], b[3], i % 2 ? "#2c4f8a" : "#6a7a94");
+    });
+    [[34, 24], [40, 20], [42, 23], [48, 26], [53, 18], [56, 20], [54, 23], [57, 26]].forEach(function (w) { px(w[0], w[1], C.yellow); });
+    rect(45, 9, 46, 33, C.white);
+  }
+
+  // A small plant on the windowsill. It leans a little, now and then.
+  function drawPlant() {
+    var lean = still ? 0 : [0, 0, 0, 1, 0, 0, 0, -1][(frame >> 2) % 8];
+    rect(55, 32, 58, 33, C.ink); rect(56, 32, 57, 33, C.red);
+    px(56, 31, C.green); px(57, 31, C.green);
+    px(56 + lean, 30, C.green); px(57 + lean, 29, C.green); px(55 + lean, 29, C.green);
+    px(56 + lean, 28, C.green);
+  }
+
   function drawWindow() {
     if (cond.night) drawNight();
+    else if (cond.dusk) drawDusk();
     if (!cond.night && !still) {
+      if (!cond.dusk) {
       // clouds drift across both panes
       rect(35, 11, 39, 12, C.sky); rect(50, 12, 55, 13, C.sky);
       var drift = (frame >> 3) % 26;
@@ -236,6 +262,7 @@
           px(x, c[1], C.white); px(x, c[1] + 1, C.white);
         }
       });
+      }
       // a stalled EDSA: cars creep one pixel at a time, brake lights blinking
       rect(33, 31, 58, 33, C.dark);
       var creep = Math.floor(frame / 10) % 26;
@@ -246,6 +273,7 @@
       rect(45, 9, 46, 33, C.white);
     }
     for (var i = 0; i < Math.min(litWindows, LIGHTS.length); i++) px(LIGHTS[i][0], LIGHTS[i][1], C.yellow);
+    drawPlant();
     if (cond.parol) {
       drawParol();
       if (!still && frame % 6 < 3) px(52, 12, C.yellow);
@@ -260,6 +288,68 @@
           px(x, y, C.grey);
           if (y < 30) px(x, y + 1, C.white);
         }
+      }
+    }
+  }
+
+  // Cabinets under the counter. An open one shows what is inside.
+  var CABS = [[1, 14], [16, 30], [32, 46], [48, 62]];
+  function drawCabinets() {
+    CABS.forEach(function (c, i) {
+      if (!cab[i]) return;
+      rect(c[0], 55, c[1], 71, C.ink);
+      rect(c[0], 55, c[0] + 1, 71, C.wood);                 // the door, swung open
+      rect(c[0] + 2, 63, c[1], 63, C.brown);                // shelf
+      var x = c[0] + 4;
+      if (i === 0) {
+        rect(x, 57, x + 1, 62, C.green); rect(x + 3, 58, x + 4, 62, C.blue); px(x, 56, C.white); px(x + 3, 57, C.white);
+        rect(x + 6, 66, x + 9, 70, C.white); rect(x + 7, 67, x + 8, 67, C.steel); rect(x + 7, 69, x + 8, 69, C.steel);
+      } else if (i === 1) {
+        [C.blue, C.red, C.white, C.green, C.orange].forEach(function (col, k) { rect(x, 61 - k, x + 6, 61 - k, col); });
+        [C.white, C.blue, C.red].forEach(function (col, k) { rect(x + 2, 70 - k * 2, x + 9, 70 - k * 2, col); });
+      } else if (i === 2) {
+        rect(x + 1, 66, x + 8, 70, C.white); rect(x + 2, 65, x + 7, 65, C.grey); px(x + 4, 64, C.grey); px(x + 5, 64, C.white);
+        px(x + 3, 68, C.grey); px(x + 6, 67, C.grey);
+        rect(x, 59, x + 4, 62, C.grey); px(x + 2, 58, C.white);
+      } else {
+        for (var k = 0; k < 3; k++) { rect(x + k * 4, 58, x + k * 4 + 2, 62, C.red); px(x + k * 4 + 1, 60, C.yellow); }
+        for (k = 0; k < 4; k++) rect(x + k * 3, 65, x + k * 3, 70, C.white);
+        rect(x + 12 - 12, 71, x + 10, 71, C.steel);
+      }
+    });
+    if (!counts.solved2) {
+      // padlock on the supply cabinet
+      rect(48, 60, 50, 60, C.ink); px(48, 61, C.ink); px(50, 61, C.ink);
+      rect(47, 62, 51, 65, C.ink); rect(48, 63, 50, 64, secret.key ? C.green : C.yellow);
+      if (secret.slip && !secret.key) {
+        // the slip on the counter, with its coffee ring once it has one
+        rect(33, 48, 36, 49, C.white);
+        if (secret.ring) px(34, 48, C.brown);
+      }
+      if (secret.key) { rect(33, 49, 36, 49, C.yellow); px(33, 48, C.yellow); px(36, 48, C.ink); }
+    }
+  }
+
+  // The building cat, asleep on the floor. It breathes, and wakes for a moment when touched.
+  function drawCat() {
+    var breath = !still && !catAwake && (frame >> 2) % 2;
+    rect(35, 122, 47, 127, C.ink); rect(36, 123, 46, 126, C.orange);          // body
+    rect(37, 121 - breath, 45, 121 - breath, C.ink);
+    if (breath) rect(37, 121, 45, 121, C.orange);
+    px(39, 123, C.brown); px(42, 123, C.brown); px(45, 123, C.brown);         // stripes
+    rect(30, 121, 36, 127, C.ink); rect(31, 122, 35, 126, C.orange);          // head
+    px(31, 120, C.ink); px(35, 120, C.ink);
+    px(33, 125, C.ink);                                                        // nose
+    if (catAwake) {
+      px(32, 123, C.green); px(34, 123, C.green);
+      var up = (frame % 2);
+      rect(48, 124 - up * 2, 48, 126, C.ink); px(49, 124 - up * 2, C.ink);    // tail flick
+    } else {
+      rect(32, 124, 32, 124, C.ink); px(34, 124, C.ink);                      // eyes shut
+      rect(48, 126, 50, 126, C.ink);                                           // tail at rest
+      if (!still) {
+        var z = (frame >> 2) % 3;
+        px(28 - z, 118 - z * 2, C.steel); px(29 - z, 118 - z * 2, C.steel); px(28 - z, 119 - z * 2, C.steel);
       }
     }
   }
@@ -299,6 +389,8 @@
     if (!ctx) return;
     ctx.clearRect(0, 0, 90, 130);
     drawWindow();
+    drawCabinets();
+    drawCat();
     if (cond.lunch) drawQueue();
     if (cond.merienda && coverDy === 0) drawSparkle();
     drawCoffee();
@@ -324,8 +416,15 @@
         coffee.step = 3;
         counts.coffee = (counts.coffee || 0) + 1;
         save();
-        var l = line("coffee");
-        if (l) P.say(l.text);
+        if (secret.slip && !secret.ring && !counts.solved2) {
+          // the mug goes down on the slip
+          secret.ring = true;
+          blip(500, 900, 200);
+          P.say(copyById("secret2-ring"));
+        } else {
+          var l = line("coffee");
+          if (l) P.say(l.text);
+        }
       }
     }
     draw();
@@ -360,6 +459,13 @@
       save();
     }
     litWindows = Math.floor(counts.window / 5);
+    if (secret.ring && !secret.key && !counts.solved2 && secs >= 20) {
+      // the slip is processed while nobody is looking
+      secret.key = true;
+      blip(900, 1300, 200);
+      P.say(copyById("secret2-key"));
+      draw();
+    }
   }
 
   function stopWatch() {
@@ -404,8 +510,43 @@
     save();
     blip(420 + Math.random() * 200, 110, 70);
     if (!$("wrap-grid").querySelector(".bubble:not(:disabled)")) {
-      setTimeout(function () { if (parcelOpen) newSheet(); }, 500);
+      // a whole sheet popped: a requisition slip for the supply key was taped underneath
+      var found = !secret.slip && !counts.solved2;
+      if (found) secret.slip = true;
+      setTimeout(function () {
+        if (parcelOpen) newSheet();
+        if (found) { blip(900, 1300, 200); P.say(copyById("secret2-slip")); draw(); }
+      }, 500);
     }
+  }
+
+  function tapCat() {
+    catAwake = still ? 1 : 10;
+    blip(180, 150, 400);
+    var l = P.choose(P.lines(function (x) { return x.pool === "cat"; }), used);
+    if (l) P.say(l.text);
+    draw();
+  }
+
+  function tapCabinet(i) {
+    if (i === 3 && !counts.solved2) {
+      if (!secret.key) {
+        blip(200, 180, 80);
+        P.say(copyById(secret.ring ? "cab-4-wait" : secret.slip ? "cab-4-slip" : "cab-4-locked"));
+        return;
+      }
+      counts.solved2 = true;
+      save();
+      cab[3] = true;
+      blip(600, 1200, 300);
+      P.say(copyById("secret2-solved"));
+      draw();
+      return;
+    }
+    cab[i] = !cab[i];
+    blip(cab[i] ? 260 : 200, cab[i] ? 320 : 160, 70);
+    if (cab[i]) P.say(copyById(i === 3 ? "cab-4-open" : "cab-" + (i + 1)));
+    draw();
   }
 
   function tapDetail(object) {
@@ -695,6 +836,8 @@
     else if (spot === "merienda") tapMerienda();
     else if (spot === "parcel") tapParcel();
     else if (spot === "window") tapWindow();
+    else if (spot === "cat") tapCat();
+    else if (spot.indexOf("cab") === 0) tapCabinet(+spot.charAt(3) - 1);
     else tapDetail(spot);
   }
 
@@ -706,7 +849,9 @@
     closeMini();
     ac = { temp: 18, idle: 0 };
     mw = { set: 0, secs: 0, endAt: 0, queue: 0, queueAt: 0, item: "bread" };
-    secret = { code: false, taken: false };
+    secret = { code: false, taken: false, slip: false, ring: false, key: false };
+    cab = [false, false, false, false];
+    catAwake = 0;
     watch = null;
     litWindows = 0;
     parcelOpen = false;
@@ -757,6 +902,7 @@
       if (coffee.pour > 0) coffee.pour--;
       if (shake > 0) shake--;
       tickMini();
+      if (catAwake > 0) catAwake--;
       if (spark && --spark.n < 0) spark = null;
       var goal = coverUp ? -13 : 0;
       if (coverDy !== goal) coverDy = coverUp ? Math.max(goal, coverDy - 5) : Math.min(goal, coverDy + 5);

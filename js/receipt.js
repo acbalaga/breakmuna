@@ -60,13 +60,22 @@
     };
   }
 
+  // Hidden cases solved during the break.
+  function cases(r) {
+    var c = r.counts || {}, out = [];
+    if (c.solved) out.push("THE OCTOBER BAON");
+    if (c.solved2) out.push("THE SUPPLY CABINET");
+    return out;
+  }
+
   P.receiptText = function (r) {
     var d = rows(r), rule = "------------------------------";
     function row(p) { return p[0] + ": " + p[1]; }
     var out = ["BREAK MUNA", "Official Break Receipt", rule]
       .concat(d.head.map(row), [rule], d.items.map(row), [rule]);
     if (d.closing) out.push(d.closing, rule);
-    if ((r.counts || {}).solved) out.push("Stamped: CASE CLOSED. The October baon.", rule);
+    var done = cases(r);
+    if (done.length) out.push("Stamped: " + (done.length > 1 ? "2 CASES CLOSED. " : "CASE CLOSED. ") + done.join(" + ") + ".", rule);
     out.push(d.reopen);
     if (d.url) out.push(d.url);
     return out.join("\n");
@@ -156,7 +165,8 @@
     text(d.reopen, cx, y += 62, 34, { align: "center", bold: true });
     if (d.url) text(d.url, cx, y += 46, 26, { align: "center", color: soft });
 
-    if ((r.counts || {}).solved) {
+    var done = cases(r);
+    if (done.length) {
       // stamp for the hidden case, in place of the barcode
       ctx.save();
       ctx.translate(cx, bottom - 100);
@@ -166,8 +176,8 @@
       ctx.strokeRect(-250, -52, 500, 104);
       ctx.lineWidth = 2;
       ctx.strokeRect(-240, -42, 480, 84);
-      text("CASE CLOSED", 0, 0, 46, { align: "center", bold: true, color: "#c8483c" });
-      text("THE OCTOBER BAON", 0, 32, 22, { align: "center", color: "#c8483c" });
+      text(done.length > 1 ? "2 CASES CLOSED" : "CASE CLOSED", 0, 0, 46, { align: "center", bold: true, color: "#c8483c" });
+      text(done.join(" + "), 0, 32, done.length > 1 ? 17 : 22, { align: "center", color: "#c8483c" });
       ctx.restore();
       return;
     }

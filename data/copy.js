@@ -3,7 +3,7 @@
 // Shape: id, pool, text, optional object, optional when.
 //   pool    coffee, merienda, parcel, background, condition, door, receipt
 //           (plus extras outside the 181: landing, unearned, caption, ref_item,
-//           microwave_result, secret)
+//           microwave_result, secret, cabinet, cat)
 //   object  background lines: microwave, ref, aircon, bulletin, clock.
 //           condition lines: the object that speaks the line (coffee, microwave,
 //           ref, bulletin). A condition line with no object is said on entering the room.
@@ -263,6 +263,29 @@ window.PANTRY_COPY = [
   { id: "secret-take", pool: "secret", text: "You take the October baon out of the ref. Nobody stops you." },
   { id: "secret-wrong", pool: "secret", text: "The October baon is unchanged. It has survived worse." },
   { id: "secret-solved", pool: "secret", text: "0:50. The October baon has been reheated at last. Case closed." },
+
+  // Inside the cabinets under the counter.
+  { id: "cab-1", pool: "cabinet", object: "cab1", text: "Cleaning supplies. Inside the door, the supply cabinet key log. Last entry: taped under the bubble wrap, for safekeeping." },
+  { id: "cab-2", pool: "cabinet", object: "cab2", text: "Plastic lids, assorted. None of the containers they belong to." },
+  { id: "cab-3", pool: "cabinet", object: "cab3", text: "A plastic bag full of other plastic bags." },
+  { id: "cab-4-locked", pool: "cabinet", object: "cab4", text: "Supply cabinet. Locked. The key is signed out in the log in the first cabinet." },
+  { id: "cab-4-open", pool: "cabinet", object: "cab4", text: "Stirrers, sachets, tissue. Fully stocked. Nobody was told." },
+
+  // The second hidden case: key log, a full sheet of bubble wrap, one cup of coffee,
+  // 20 seconds at the window, then the supply cabinet.
+  { id: "secret2-slip", pool: "secret", text: "Taped under the bubble wrap: not the key. A requisition slip for it. Valid only with a coffee ring." },
+  { id: "secret2-ring", pool: "secret", text: "You set the mug on the slip. It has a coffee ring now, which makes it valid. Processing takes 20 seconds and cannot be watched." },
+  { id: "secret2-key", pool: "secret", text: "You looked away for 20 seconds. A key is on the counter. The tag says SUPPLY." },
+  { id: "secret2-solved", pool: "secret", text: "The supply cabinet is open. It is full of stirrers. There were always stirrers. Case closed." },
+  { id: "cab-4-slip", pool: "cabinet", object: "cab4", text: "Locked. You have a slip, but it is not valid yet. It needs a coffee ring." },
+  { id: "cab-4-wait", pool: "cabinet", object: "cab4", text: "Locked. The slip is in processing. This does not happen while watched. Try the window." },
+
+  // The building cat.
+  { id: "cat-1", pool: "cat", text: "The building cat. Not on the payroll. Present every day." },
+  { id: "cat-2", pool: "cat", text: "The cat is asleep. It has no deliverables." },
+  { id: "cat-3", pool: "cat", text: "The cat opens one eye. You have been assessed." },
+  { id: "cat-4", pool: "cat", text: "Feeding the cat is not allowed. The cat is well fed." },
+  { id: "cat-5", pool: "cat", text: "The cat has outlasted three office renovations." },
 
   // Optional post caption for the copy button.
   { id: "caption-01", pool: "caption", text: "Five minutes in the pantry. It is on record." }

@@ -132,6 +132,7 @@
     var s = num(KEY.start);
     if (s === null) return;
     var receipt = { start: s, end: end, reopen: end + COOLDOWN_MS, counts: json(KEY.counts) || {} };
+    if (P.completeReceipt) P.completeReceipt(receipt);
     store.set(KEY.end, end);
     store.set(KEY.last, JSON.stringify(receipt));
     document.dispatchEvent(new CustomEvent("pantry:close", { detail: receipt }));
@@ -216,7 +217,7 @@
   function openReceipt() {
     var r = json(KEY.last);
     if (!r) return;
-    el.receiptText.textContent = P.receiptText(r);
+    P.renderReceipt(r);
     el.receipt.hidden = false;
     el.receiptClose.focus();
   }

@@ -48,5 +48,13 @@ window.PANTRY_COPY = [
 
   // Receipt closing lines
   { id: "receipt-01", pool: "receipt", text: "Thank you. Your emails have been waiting quietly." },
-  { id: "receipt-02", pool: "receipt", text: "Break recorded. No approval was required." }
+  { id: "receipt-02", pool: "receipt", text: "Break recorded. No approval was required." },
+
+  // Receipt line the visitor did not earn. Not in the approved 30, review before launch.
+  { id: "unearned-01", pool: "unearned", label: "Meetings avoided", value: "1" },
+  { id: "unearned-02", pool: "unearned", label: "Emails answered", value: "0" },
+  { id: "unearned-03", pool: "unearned", label: "Reply-alls ignored", value: "1" },
+
+  // Optional post caption for the copy button. Not in the approved 30, review before launch.
+  { id: "caption-01", pool: "caption", text: "Five minutes in the pantry. It is on record." }
 ];

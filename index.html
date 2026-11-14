@@ -71,8 +71,13 @@
 
 <div class="receipt" id="receipt" role="dialog" aria-modal="true" aria-label="Break receipt" hidden>
   <div class="slip">
-    <pre id="receipt-text"></pre>
-    <button type="button" class="ctl" id="receipt-close">Close</button>
+    <canvas id="receipt-canvas" width="1080" height="1350" aria-hidden="true"></canvas>
+    <pre class="sr-only" id="receipt-text"></pre>
+    <div class="receipt-actions">
+      <button type="button" class="ctl" id="receipt-share">Save image</button>
+      <button type="button" class="ctl" id="receipt-caption">Copy caption</button>
+      <button type="button" class="ctl" id="receipt-close">Close</button>
+    </div>
   </div>
 </div>
 

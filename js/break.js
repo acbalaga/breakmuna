@@ -117,7 +117,6 @@
     lastElapsed = 0;
     lastSecond = -1;
     el.room.classList.remove("lights-off", "flicker");
-    el.countdown.hidden = true;
     setSpots(true);
     say("");
     show("break");
@@ -147,7 +146,6 @@
   function lightsOut() {
     show("closing");
     setSpots(false);
-    el.countdown.hidden = true;
     el.room.classList.add("lights-off");
     drawHands(BREAK_MS);
     var end = num(KEY.start) + BREAK_MS;
@@ -209,11 +207,6 @@
       if (second !== lastSecond) {
         lastSecond = second;
         drawHands(p.elapsed);
-        if (p.elapsed >= WARN_MS) {
-          var left = Math.max(0, Math.ceil((BREAK_MS - p.elapsed) / 1000));
-          el.countdown.textContent = "0:" + String(left).padStart(2, "0");
-          el.countdown.hidden = false;
-        }
       }
       if (p.elapsed >= WARN_MS && !warned) {
         warned = true;
@@ -249,7 +242,7 @@
   // ---- init -------------------------------------------------------------------
 
   function init() {
-    ["room", "door", "dialog", "sign", "countdown", "exit", "hands", "receipt"].forEach(function (id) { el[id] = $(id); });
+    ["room", "door", "dialog", "sign", "exit", "hands", "receipt"].forEach(function (id) { el[id] = $(id); });
     el.doorBtn = $("door-btn");
     el.lastReceipt = $("last-receipt");
     el.receiptText = $("receipt-text");

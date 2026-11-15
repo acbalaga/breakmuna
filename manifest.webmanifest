@@ -10,6 +10,7 @@
   "theme_color": "#1f1a24",
   "icons": [
     { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-maskable-520.png", "sizes": "520x520", "type": "image/png", "purpose": "maskable" }
   ]
 }

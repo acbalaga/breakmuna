@@ -492,7 +492,8 @@ body[data-view="cooldown"] .sign { animation: sway 1.2s steps(1) 1; transform-or
 }
 .slip {
   width: 100%;
-  max-width: min(340px, calc((100dvh - 110px) * 0.8));
+  /* 170 px is two rows of buttons and the hint line, so they stay on a short screen */
+  max-width: min(340px, calc((100dvh - 170px) * 0.8));
   text-align: center;
 }
 /* An image, not a canvas, so press and hold can save it where the share sheet is missing. */

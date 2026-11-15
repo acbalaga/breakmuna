@@ -183,7 +183,8 @@ The receipt is the share object, so it is the one feature that cannot be cut. It
 - Rendered to a canvas and saved as a PNG at 1080 by 1350 pixels, the portrait ratio LinkedIn shows without cropping.
 - The slip on screen is an image of that PNG, not the canvas. Where an in-app browser has no share sheet and ignores downloads, press and hold on the receipt still saves it, and a line under the buttons says so.
 - On phones, the share button opens the native share sheet with the image attached. Where that is unsupported, it downloads the file.
-- A "copy caption" button gives one optional line of post text. No hashtags, no call to action.
+- A "copy image" button puts the receipt on the clipboard, to paste straight into a post. It shows where the browser supports it, except on phones that already have the share sheet.
+- A "copy caption" button gives one optional line of post text, a different one on each press. No hashtags, no call to action.
 - The link preview uses a fixed image of the closed pantry door, since a static site cannot generate one per visitor.
 
 **Rules**

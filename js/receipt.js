@@ -243,8 +243,31 @@
     } else download();
   }
 
+  // The receipt itself onto the clipboard, to paste straight into a post. This is the
+  // short way on a desktop, where there is no share sheet.
+  function canCopyImage() {
+    try { return !!(window.ClipboardItem && navigator.clipboard && navigator.clipboard.write); } catch (e) { return false; }
+  }
+  function copyImage() {
+    var b = $("receipt-copy");
+    if (!blob || !canCopyImage()) return;
+    function say(t) {
+      b.textContent = t;
+      setTimeout(function () { b.textContent = "Copy image"; }, 1500);
+    }
+    try {
+      navigator.clipboard.write([new ClipboardItem({ "image/png": blob })])
+        .then(function () { say("Copied"); }, function () { say("Not copied"); });
+    } catch (e) { say("Not copied"); }
+  }
+
+  var captionsUsed = {};
   function copyCaption() {
-    var line = pick("caption"), b = $("receipt-caption");
+    var b = $("receipt-caption");
+    // a different line on each press, until the pool runs out
+    var lines = P.lines(function (l) { return l.pool === "caption"; });
+    var line = P.choose(lines, captionsUsed);
+    if (!line) { captionsUsed = {}; line = P.choose(lines, captionsUsed); }
     if (!line) return;
     function done() {
       b.textContent = "Copied";
@@ -289,11 +312,14 @@
       if (sheet) shareBtn.textContent = "Share";
       // touch screens without a share sheet: say that the image itself can be saved
       hint.hidden = sheet || !coarse();
+      // on a phone with a share sheet the sheet already offers Copy, so the row stays short
+      $("receipt-copy").hidden = !canCopyImage() || (sheet && coarse());
     }, "image/png");
   };
 
   function init() {
     $("receipt-share").addEventListener("click", share);
+    $("receipt-copy").addEventListener("click", copyImage);
     $("receipt-caption").addEventListener("click", copyCaption);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);

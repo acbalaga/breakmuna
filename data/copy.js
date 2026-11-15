@@ -337,6 +337,17 @@ window.PANTRY_COPY = [
   { id: "magnet-straight", pool: "hint", text: "The magnets are aligned. This will last until lunch." },
   { id: "note-new", pool: "hint", text: "A fresh sticky note. It has about half its stick left." },
 
-  // Optional post caption for the copy button.
-  { id: "caption-01", pool: "caption", text: "Five minutes in the pantry. It is on record." }
+  // Optional post captions for the copy button. One is picked per press. No hashtags, no call to action.
+  { id: "caption-01", pool: "caption", text: "Five minutes in the pantry. It is on record." },
+  { id: "caption-02", pool: "caption", text: "Took a five minute break. There is paperwork." },
+  { id: "caption-03", pool: "caption", text: "Break taken. Receipt attached for audit purposes." },
+  { id: "caption-04", pool: "caption", text: "The pantry issued a receipt. I did not ask for one." },
+  { id: "caption-05", pool: "caption", text: "Stepped away from my desk for five minutes. Documentation attached." },
+  { id: "caption-06", pool: "caption", text: "For the record, I was in the pantry." },
+  { id: "caption-07", pool: "caption", text: "My break has been itemized." },
+  { id: "caption-08", pool: "caption", text: "Five minutes, one receipt, no approvals needed." },
+  { id: "caption-09", pool: "caption", text: "The pantry is closed to me for the next thirty minutes. I have been informed in writing." },
+  { id: "caption-10", pool: "caption", when: ["weekend"], text: "A pantry break on a weekend. The receipt does not explain it either." },
+  { id: "caption-11", pool: "caption", when: ["friday_close"], text: "Friday break, on record. Nothing further this week." },
+  { id: "caption-12", pool: "caption", when: ["monday_morning"], text: "Monday morning break. Filed before the first meeting." }
 ];

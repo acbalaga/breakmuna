@@ -3,7 +3,8 @@
 // Shape: id, pool, text, optional object, optional when.
 //   pool    coffee, merienda, parcel, background, condition, door, receipt
 //           (plus extras outside the 181: landing, unearned, caption, ref_item,
-//           microwave_result, secret, cabinet, cat)
+//           microwave_result, secret, cabinet, cat, cat_known, window, plant,
+//           wash, magnet, hint)
 //   object  background lines: microwave, ref, aircon, bulletin, clock.
 //           condition lines: the object that speaks the line (coffee, microwave,
 //           ref, bulletin). A condition line with no object is said on entering the room.
@@ -286,6 +287,55 @@ window.PANTRY_COPY = [
   { id: "cat-3", pool: "cat", text: "The cat opens one eye. You have been assessed." },
   { id: "cat-4", pool: "cat", text: "Feeding the cat is not allowed. The cat is well fed." },
   { id: "cat-5", pool: "cat", text: "The cat has outlasted three office renovations." },
+
+  // Once the cat knows the visitor. The stage lines are said once, when it warms up.
+  { id: "cat-stage-1", pool: "hint", text: "The cat has started to recognize you. From now on it looks up when you come in." },
+  { id: "cat-stage-2", pool: "hint", text: "The cat has filed you under furniture. It will join you at the window." },
+  { id: "cat-k1", pool: "cat_known", text: "The cat is purring. This is not a performance review, but it went well." },
+  { id: "cat-k2", pool: "cat_known", text: "The cat knows your break schedule. It has not reported it." },
+  { id: "cat-k3", pool: "cat_known", text: "The cat allows this. The arrangement is informal." },
+  { id: "cat-k4", pool: "cat_known", text: "Purring. Volume: low. Duration: at the cat's discretion." },
+  { id: "cat-k5", pool: "cat_known", text: "The cat has seen you before. You are on its list of acceptable persons." },
+
+  // At the window. In four seconds, out six. The glass fogs on the way out.
+  { id: "window-01", pool: "window", text: "The window. Breathe out and the glass fogs. Drawing on it is permitted." },
+  { id: "window-02", pool: "window", text: "Nothing is required at the window. In for four, out for six, if you want a task." },
+  { id: "window-03", pool: "window", text: "Breathe out, the glass fogs. Whatever you draw is gone before the next meeting." },
+  { id: "window-04", pool: "window", when: ["rainy_season"], text: "Rain on the glass. Breathe with it. The traffic below is not yours for five minutes." },
+  { id: "window-05", pool: "window", when: ["overtime"], text: "The city at night. Breathe out, the glass fogs. Most of those lit windows are also on break." },
+  { id: "window-quiet", pool: "hint", text: "The sound is off. It can be turned on, bottom left." },
+
+  // The sill plant. One watering per break. The grow lines are said once each.
+  { id: "plant-01", pool: "plant", text: "You water the sill plant. It is the only thing here with a growth plan." },
+  { id: "plant-02", pool: "plant", text: "Watered. The plant has no owner on record. It is doing fine." },
+  { id: "plant-03", pool: "plant", text: "One watering, logged. The plant does not send a calendar invite." },
+  { id: "plant-04", pool: "plant", text: "Watered. It leans toward the window, away from the office." },
+  { id: "plant-done", pool: "hint", text: "Already watered this break. The plant asks for nothing further." },
+  { id: "plant-grow-1", pool: "hint", text: "Watered. The plant has a new leaf. Nobody announced it." },
+  { id: "plant-grow-2", pool: "hint", text: "Watered. The plant is taller than it was. It has been keeping count of your breaks." },
+  { id: "plant-grow-3", pool: "hint", text: "Watered. The plant has flowered. This was not in anyone's targets." },
+  { id: "plant-grow-4", pool: "hint", text: "Watered. A second flower. The plant is now the most productive thing on this floor." },
+
+  // The mug. Stir it, and afterwards wash it.
+  { id: "stir-hint", pool: "hint", text: "Stir. Circles work. The powder is in no hurry." },
+  { id: "wash-own", pool: "hint", text: "Your mug, emptied. Scrub, then rinse." },
+  { id: "wash-soak", pool: "hint", text: "A mug left to soak. It has been soaking since Tuesday. Scrub, then rinse." },
+  { id: "wash-dry", pool: "hint", text: "There is no soap on it yet. Scrub first." },
+  { id: "wash-stain", pool: "hint", text: "Rinsed. The stain stayed. Scrub it again." },
+  { id: "wash-clean", pool: "hint", text: "The mug is already clean. Leave it while it lasts." },
+  { id: "wash-01", pool: "wash", text: "The mug is clean. This condition is temporary." },
+  { id: "wash-02", pool: "wash", text: "One mug washed. The sponge has seen worse." },
+  { id: "wash-03", pool: "wash", text: "Clean. The coffee ring was older than some of the staff." },
+  { id: "wash-04", pool: "wash", text: "Washed and set to dry. The drying rack is the counter." },
+  { id: "wash-05", pool: "wash", text: "Clean. The dishwashing liquid is now mostly water, per office practice." },
+  { id: "wash-06", pool: "wash", text: "Done. Nobody will know it was you. That is how it works." },
+
+  // The ref door. The magnets and the note stay where they are left.
+  { id: "magnet-01", pool: "magnet", text: "The ref door. Magnets from three pizza places and one dentist. Arrange as needed." },
+  { id: "magnet-02", pool: "magnet", text: "Ref door. The magnets hold nothing up. They are here on their own merit." },
+  { id: "magnet-03", pool: "magnet", text: "Magnets and one sticky note. Whatever you leave here will still be here next break." },
+  { id: "magnet-straight", pool: "hint", text: "The magnets are aligned. This will last until lunch." },
+  { id: "note-new", pool: "hint", text: "A fresh sticky note. It has about half its stick left." },
 
   // Optional post caption for the copy button.
   { id: "caption-01", pool: "caption", text: "Five minutes in the pantry. It is on record." }

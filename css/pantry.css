@@ -72,6 +72,7 @@ body {
 [data-spot="merienda"]   { left: 15.6%; top: 59.2%; width: 27.8%; height: 11.5%; }
 [data-spot="parcel"]     { left: 63.3%; top: 70.8%; width: 36.7%; height: 23.8%; }
 [data-spot="window"]     { left: 33.3%; top: 4.6%; width: 35.6%; height: 24.6%; }
+[data-spot="plant"]      { left: 58.9%; top: 16.9%; width: 7.8%; height: 9.2%; }
 [data-spot="cab1"]       { left: 0%; top: 41.5%; width: 17.2%; height: 13.8%; }
 [data-spot="cab2"]       { left: 17.2%; top: 41.5%; width: 17.2%; height: 13.8%; }
 [data-spot="cab3"]       { left: 34.4%; top: 41.5%; width: 17.8%; height: 13.8%; }
@@ -79,6 +80,7 @@ body {
 [data-spot="cat"]        { left: 31.1%; top: 89.2%; width: 25.6%; height: 10.8%; }
 [data-spot="microwave"]  { left: 40%; top: 29.2%; width: 27.8%; height: 9.2%; }
 [data-spot="ref"]        { left: 72.2%; top: 22.3%; width: 26.7%; height: 39.2%; }
+[data-spot="refdoor"]    { left: 73.3%; top: 23.1%; width: 24.4%; height: 11.2%; }
 [data-spot="aircon"]     { left: 44.4%; top: 63.8%; width: 12.3%; height: 7.7%; }
 [data-spot="bulletin"]   { left: 2.2%; top: 10%; width: 24.4%; height: 13.8%; }
 [data-spot="clock"]      { left: 74.4%; top: 5.4%; width: 20%; height: 13.8%; }
@@ -416,6 +418,49 @@ body[data-view="cooldown"] .sign { animation: sway 1.2s steps(1) 1; transform-or
 .mw-side .ctl { min-height: 44px; }
 @media (prefers-reduced-motion: reduce) {
   .mw-window.running, .mw-window.running .mw-plate { animation: none; }
+}
+
+/* Hands-on panels: the window, the sink, the cup, the ref door. Each is a small
+   canvas on the art grid, scaled up. Dragging on one must not scroll the page. */
+.toy {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  border: 4px solid var(--ink);
+  background: var(--paper);
+  line-height: 0;
+}
+.toy-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.toy-window { max-width: 260px; cursor: url("../assets/cursors/eyes.png") 16 12, pointer; }
+.toy-window .fog { position: absolute; inset: 0; height: 100%; image-rendering: auto; }
+.toy-wash { max-width: 280px; }
+.toy-stir { max-width: 220px; border: 0; background: transparent; cursor: url("../assets/cursors/spoon.png") 2 2, pointer; }
+.door-row { display: flex; justify-content: center; align-items: flex-start; gap: 10px; }
+.toy-board { flex: 16; max-width: 176px; }
+.toy-note { flex: 14; max-width: 126px; border-color: var(--ink); }
+
+/* Breathing pacer under the window: fills on the way in, empties on the way out. */
+.pacer {
+  width: 100%;
+  max-width: 260px;
+  height: 12px;
+  margin: 8px auto 0;
+  background: var(--paper);
+  border: 3px solid var(--ink);
+}
+.pacer-fill { height: 100%; width: 0; background: #4a8fd0; transition: width 0.25s linear; }
+.pacer-word { margin-top: 4px; font-size: 14px; line-height: 1.3; text-align: center; }
+@media (prefers-reduced-motion: reduce) {
+  .pacer-fill { transition: none; }
 }
 
 /* Phones have no cursor, so a tap shows the station icon for a moment. */

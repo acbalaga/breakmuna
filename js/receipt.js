@@ -45,6 +45,11 @@
       ["Bubbles popped", String(c.bubbles || 0)],
       ["Seconds at the window", String(c.window || 0)]
     ];
+    // lines that only print when they happened
+    if (c.breaths > 0) items.push(["Slow breaths", String(c.breaths)]);
+    if (c.washed > 0) items.push(["Mugs washed", String(c.washed)]);
+    if (c.watered) items.push(["Sill plant", "Watered"]);
+    if (typeof c.cat === "string" && c.cat) items.push(["Cat's assessment", c.cat.slice(0, 16)]);
     if (r.extra) items.push([r.extra.label, String(r.extra.value)]);
     return {
       head: [
@@ -131,8 +136,11 @@
       ctx.beginPath(); ctx.moveTo(L + PAD, y); ctx.lineTo(R - PAD, y); ctx.stroke();
       ctx.setLineDash([]);
     }
+    // A full receipt has nine line items. The rows close up so the slip stays one page.
+    var many = d.items.length > 6;
+    var step = Math.min(52, Math.floor((many ? 512 : 470) / (d.head.length + d.items.length)));
     function row(pair, y) {
-      var size = 32, max = R - L - PAD * 2;
+      var size = step < 46 ? 28 : 32, max = R - L - PAD * 2;
       ctx.font = size + "px " + MONO;
       // shrink a long row instead of letting it collide
       while (size > 20 && ctx.measureText(pair[0] + "  " + pair[1]).width > max) {
@@ -148,36 +156,36 @@
     text("Official Break Receipt", cx, y += 56, 30, { align: "center", color: soft });
     rule(y += 46);
     y += 8;
-    d.head.forEach(function (p) { row(p, y += 52); });
+    d.head.forEach(function (p) { row(p, y += step); });
     rule(y += 40);
     y += 8;
-    d.items.forEach(function (p) { row(p, y += 52); });
+    d.items.forEach(function (p) { row(p, y += step); });
     rule(y += 40);
 
     if (d.closing) {
       ctx.font = "30px " + MONO;
-      var lines = wrap(ctx, d.closing, R - L - PAD * 2).slice(0, 3);
+      var lines = wrap(ctx, d.closing, R - L - PAD * 2).slice(0, many ? 2 : 3);
       y += 14;
       lines.forEach(function (l) { text(l, cx, y += 42, 30, { align: "center" }); });
       rule(y += 44);
     }
 
     text(d.reopen, cx, y += 62, 34, { align: "center", bold: true });
-    if (d.url) text(d.url, cx, y += 46, 26, { align: "center", color: soft });
-
     var done = cases(r);
+    if (d.url) text(d.url, cx, y += done.length ? 38 : 46, 26, { align: "center", color: soft });
+
     if (done.length) {
       // stamp for the hidden case, in place of the barcode
       ctx.save();
-      ctx.translate(cx, bottom - 100);
+      ctx.translate(cx, bottom - 80);
       ctx.rotate(-0.07);
       ctx.strokeStyle = "#c8483c";
       ctx.lineWidth = 6;
-      ctx.strokeRect(-250, -52, 500, 104);
+      ctx.strokeRect(-250, -44, 500, 88);
       ctx.lineWidth = 2;
-      ctx.strokeRect(-240, -42, 480, 84);
-      text(done.length > 1 ? "2 CASES CLOSED" : "CASE CLOSED", 0, 0, 46, { align: "center", bold: true, color: "#c8483c" });
-      text(done.join(" + "), 0, 32, done.length > 1 ? 17 : 22, { align: "center", color: "#c8483c" });
+      ctx.strokeRect(-240, -35, 480, 70);
+      text(done.length > 1 ? "2 CASES CLOSED" : "CASE CLOSED", 0, 2, 42, { align: "center", bold: true, color: "#c8483c" });
+      text(done.join(" + "), 0, 27, done.length > 1 ? 17 : 20, { align: "center", color: "#c8483c" });
       ctx.restore();
       return;
     }

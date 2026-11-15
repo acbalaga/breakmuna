@@ -295,6 +295,10 @@
     else showLanding();
 
     setInterval(tick, 250);
+    // Keeps a copy of the site on the device, so the pantry opens from the home screen without a signal.
+    try {
+      if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () {});
+    } catch (e) {}
     document.addEventListener("visibilitychange", tick);
     window.addEventListener("pageshow", tick);
   }

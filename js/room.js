@@ -1,4 +1,5 @@
-// Stations, background objects, tap icons and sound.
+// Stations, background objects and tap icons. Sound is in js/sound.js,
+// the hands-on panels and what the room remembers are in js/toys.js.
 // Everything that moves is drawn on the #fx canvas, one art pixel at a time.
 (function () {
   var P = (window.Pantry = window.Pantry || {});
@@ -24,7 +25,7 @@
   var coverDy = 0;            // food cover offset, steps toward 0 or -13
   var shake = 0;              // frames left of the sachet being emptied
   var spark = null;           // { x, y, n } tap flash on a background object
-  var mini = null;            // which mini panel is open: aircon, ref, bulletin, microwave
+  var mini = null;            // which panel is open: aircon, ref, bulletin, microwave, window, wash, stir, door
   var ac = { temp: 18, idle: 0 };
   var mw = { set: 0, secs: 0, endAt: 0, queue: 0, queueAt: 0, item: "bread" };
   // progress on the two hidden cases, see the secret pool in data/copy.js
@@ -32,10 +33,11 @@
   var cab = [false, false, false, false];   // which cabinets are open
   var catAwake = 0;                         // frames the cat stays awake after a tap
   var watch = null;           // { start, base } while at the window
+  var mugClean = false;       // washed, and not used since
+  var drops = 0;              // frames left of water falling on the sill plant
   var litWindows = 0;
   var parcelOpen = false;
   var soundOn = false;
-  var audio = null;
   var cond = {};
   var stirsNeeded = STIRS;
 
@@ -92,22 +94,17 @@
 
   // ---- sound ----------------------------------------------------------------
 
-  function blip(from, to, ms) {
-    if (!soundOn) return;
-    try {
-      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
-      var t = audio.currentTime, o = audio.createOscillator(), g = audio.createGain();
-      o.frequency.setValueAtTime(from, t);
-      o.frequency.exponentialRampToValueAtTime(to, t + ms / 1000);
-      g.gain.setValueAtTime(0.15, t);
-      g.gain.exponentialRampToValueAtTime(0.001, t + ms / 1000);
-      o.connect(g); g.connect(audio.destination);
-      o.start(t); o.stop(t + ms / 1000);
-    } catch (e) {}
+  // The sounds themselves are in js/sound.js.
+  function blip(from, to, ms) { P.sound.blip(from, to, ms); }
+
+  // The ambience follows the room: rain when it rains, the outside when at the window.
+  function soundScene() {
+    P.sound.scene({ rain: !!cond.rain, window: mini === "window", microwave: !!(mw.endAt || cond.lunch) });
   }
 
   function setSound(on) {
     soundOn = on;
+    P.sound.on(on);
     var b = $("sound");
     b.setAttribute("aria-pressed", String(on));
     b.querySelector("img").src = "assets/sprites/" + (on ? "sound_on" : "sound_off") + ".png";
@@ -269,12 +266,31 @@
   var PAROL = ["..k..", "..r..", ".ryr.", "rywyr", ".ryr.", "..r..", ".y.y.", ".y.y."];
 
   // A small plant on the windowsill. It leans a little, now and then.
+  // It grows with every break it is watered in, and it never shrinks.
   function drawPlant() {
     var lean = still ? 0 : [0, 0, 0, 1, 0, 0, 0, -1][(frame >> 2) % 8];
+    var stage = P.home.plantStage();
     rect(55, 32, 58, 33, C.ink); rect(56, 32, 57, 33, C.red);
     px(56, 31, C.green); px(57, 31, C.green);
     px(56 + lean, 30, C.green); px(57 + lean, 29, C.green); px(55 + lean, 29, C.green);
     px(56 + lean, 28, C.green);
+    if (stage >= 1) { px(58 + lean, 28, C.green); px(57 + lean, 27, C.green); }
+    if (stage >= 2) { px(56 + lean, 26, C.green); px(55 + lean, 26, C.green); px(57 + lean, 25, C.green); px(54 + lean, 28, C.green); }
+    if (stage >= 3) { px(57 + lean, 24, C.yellow); px(56 + lean, 24, C.white); px(58 + lean, 24, C.white); px(57 + lean, 23, C.white); }
+    if (stage >= 4) { px(54 + lean, 26, C.yellow); px(54 + lean, 25, C.white); px(53 + lean, 26, C.white); }
+    if (drops > 0) {
+      // water from above, two drops at a time
+      var d = 4 - drops;
+      px(56, 20 + d * 2, C.blue); px(57, 22 + d * 2, C.blue);
+    }
+  }
+
+  // The ref door: magnets and a sticky note, wherever the visitor left them.
+  function drawRefDoor() {
+    var h = P.home.get(), n = P.home.NOTE;
+    h.magnets.forEach(function (m, i) { rect(71 + m[0], 32 + m[1], 72 + m[0], 33 + m[1], P.home.MAGNET_COLORS[i]); });
+    rect(73, 48, 72 + n, 47 + n, C.yellow);
+    for (var i = 0; i < n * n; i++) if (h.note.charAt(i) === "1") px(73 + i % n, 48 + Math.floor(i / n), C.brown);
   }
 
   function drawWindow() {
@@ -297,14 +313,16 @@
       if (!still && frame % 6 < 3) px(52, 12, C.yellow);
     }
     if (cond.rain) {
-      // rain falls: short streaks sliding down every third column
+      // rain falls: thin blue streaks, three pixels long, sliding down every third column.
+      // Long and blue on purpose. Short white dots read as snow, and this is Manila.
       var f = still ? 0 : frame;
       for (var x = 33; x <= 58; x += 3) {
         if (x === 45) continue;
         for (var k = 0; k < 2; k++) {
-          var y = 9 + (x * 13 + k * 11 + f * 3) % 22;
-          px(x, y, cond.night ? C.steel : C.white);
-          if (y < 30) px(x, y + 1, cond.night ? C.grey : C.steel);
+          var y = 9 + (x * 13 + k * 11 + f * 3) % 21;
+          px(x, y, cond.night ? C.slate : C.blue);
+          px(x, y + 1, cond.night ? C.slate : C.blue);
+          px(x, y + 2, cond.night ? C.blue : C.sky);
         }
       }
     }
@@ -381,6 +399,7 @@
     "..kkkkk.kkkkkkkkk....."
   ];
   function drawCat() {
+    if (mini === "window" && P.home.catStage() === 2) return;   // it is on the sill, see js/toys.js
     var x = 29, y = 120, slow = frame >> 2;
     var breath = !still && !catAwake && slow % 2;
     rect(x + 2, y + 8, x + 19, y + 8, C.shade);
@@ -434,6 +453,7 @@
     if (!ctx) return;
     ctx.clearRect(0, 0, 90, 130);
     drawWindow();
+    drawRefDoor();
     drawCabinets();
     drawCat();
     if (cond.lunch) drawQueue();
@@ -451,27 +471,44 @@
     if (spot === "sachet" && (coffee.step === 0 || coffee.step === 3)) {
       coffee.step = 1; coffee.stirs = 0; shake = still ? 0 : 3;
       blip(900, 500, 50);
+      mugClean = false;
     } else if (spot === "dispenser" && coffee.step === 1) {
       coffee.step = 2; coffee.pour = 4;
-      blip(300, 180, 250);
-    } else if (spot === "mug" && coffee.step === 2) {
-      coffee.stirs++;
-      blip(1400, 1200, 40);
-      if (coffee.stirs >= stirsNeeded) {
-        coffee.step = 3;
-        counts.coffee = (counts.coffee || 0) + 1;
-        save();
-        if (secret.slip && !secret.ring && !counts.solved2) {
-          // the mug goes down on the slip
-          secret.ring = true;
-          blip(500, 900, 200);
-          P.say(copyById("secret2-ring"));
-        } else {
-          var l = line("coffee");
-          if (l) P.say(l.text);
-        }
-      }
+      P.sound.gurgle();
+    } else if (spot === "mug") {
+      // water in: stir it. Empty or finished: it goes to the sink.
+      if (coffee.step === 2) openMini("stir");
+      else if (coffee.step === 0 && mugClean) P.say(copyById("wash-clean"));
+      else if (coffee.step !== 1) openMini("wash");
     }
+    draw();
+  }
+
+  // The stirring is done: one cup, on the record.
+  function brewed() {
+    coffee.step = 3;
+    counts.coffee = (counts.coffee || 0) + 1;
+    save();
+    if (secret.slip && !secret.ring && !counts.solved2) {
+      // the mug goes down on the slip
+      secret.ring = true;
+      blip(500, 900, 200);
+      P.say(copyById("secret2-ring"));
+    } else {
+      var l = line("coffee");
+      if (l) P.say(l.text);
+    }
+    draw();
+  }
+
+  function washed() {
+    counts.washed = (counts.washed || 0) + 1;
+    save();
+    mugClean = true;
+    if (coffee.step === 3) coffee.step = 0;
+    blip(900, 1400, 160);
+    var l = line("wash");
+    if (l) P.say(l.text);
     draw();
   }
 
@@ -490,10 +527,15 @@
     draw();
   }
 
+  // The count of seconds runs for as long as the window panel is open.
   function tapWindow() {
-    if (watch) { stopWatch(); return; }
+    if (mini === "window") return;
+    openMini("window");
     watch = { start: P.now(), base: counts.window || 0 };
     updateWatch();
+    var l = line("window");
+    if (l) P.say(l.text + (soundOn ? "" : " " + copyById("window-quiet")));
+    if (P.home.catStage() === 2) P.sound.purr(4);
   }
 
   function updateWatch() {
@@ -566,12 +608,44 @@
     }
   }
 
+  // The cat warms up over breaks, not over taps: one step for each break it was petted in.
+  var CAT_VERDICT = ["Under review", "Acknowledged", "Approved"];
   function tapCat() {
-    catAwake = still ? 1 : 10;
-    blip(180, 150, 400);
-    var l = P.choose(P.lines(function (x) { return x.pool === "cat"; }), used);
+    var before = P.home.catStage();
+    if (!counts.cat) {
+      P.home.get().cat++;
+      P.home.save();
+    }
+    var stage = P.home.catStage();
+    counts.cat = CAT_VERDICT[stage];
+    save();
+    catAwake = still ? 1 : stage ? 16 : 10;
+    if (stage) P.sound.purr(3); else blip(180, 150, 400);
+    var pool = stage ? "cat_known" : "cat";
+    var l = stage !== before ? { text: copyById("cat-stage-" + stage) } : P.choose(P.lines(function (x) { return x.pool === pool; }), used);
     if (l) P.say(l.text);
     draw();
+  }
+
+  // One watering per break. The plant grows by how many breaks it was watered in.
+  function tapPlant() {
+    if (counts.watered) { P.say(copyById("plant-done")); return; }
+    var before = P.home.plantStage();
+    P.home.get().plant++;
+    P.home.save();
+    counts.watered = 1;
+    save();
+    drops = still ? 0 : 4;
+    P.sound.gurgle();
+    var stage = P.home.plantStage(), l = stage !== before ? { text: copyById("plant-grow-" + stage) } : line("plant");
+    if (l) P.say(l.text);
+    draw();
+  }
+
+  function tapRefDoor() {
+    openMini("door");
+    var l = line("magnet");
+    if (l) P.say(l.text);
   }
 
   function tapCabinet(i) {
@@ -808,6 +882,24 @@
     return l ? l.text : "";
   }
 
+  // What the panels in js/toys.js may reach in the room.
+  var api = {
+    node: node, key: key, blip: blip, copy: copyById, active: active, save: save,
+    say: function (text) { if (text) P.say(text); },
+    counts: function () { return counts; },
+    coffee: function () { return coffee; },
+    stirs: function () { return stirsNeeded; },
+    still: function () { return still; },
+    fx: function () { return fx; },
+    brewed: brewed,
+    washed: washed,
+    close: function () { closeMini(); draw(); }
+  };
+  Object.keys(P.toys).forEach(function (k) {
+    var toy = P.toys[k];
+    MINI[k] = { label: toy.label, build: function (body) { toy.build(body, api); }, close: toy.close };
+  });
+
   // What the microwave says when it is done, by what went in and for how long.
   function microwaveDone() {
     if (mw.item === "october") {
@@ -842,10 +934,12 @@
       }
     }
     MINI.microwave.show();
+    if (mini && P.toys[mini]) P.toys[mini].tick(api);
   }
 
   function openMini(kind) {
     closeParcel();
+    closeMini();
     mini = kind;
     var body = $("mini-body");
     body.textContent = "";
@@ -856,6 +950,8 @@
   }
 
   function closeMini() {
+    if (mini === "window") stopWatch();
+    if (mini && MINI[mini].close) MINI[mini].close();
     mini = null;
     $("mini").hidden = true;
     $("mini-body").textContent = "";
@@ -878,12 +974,13 @@
   function onSpot(e) {
     var b = e.currentTarget, spot = b.dataset.spot;
     if (!active()) return;
-    if (spot !== "window") stopWatch();
     if (spot === "sachet" || spot === "dispenser" || spot === "mug") tapCoffee(spot);
     else if (spot === "merienda") tapMerienda();
     else if (spot === "parcel") tapParcel();
     else if (spot === "window") tapWindow();
     else if (spot === "cat") tapCat();
+    else if (spot === "plant") tapPlant();
+    else if (spot === "refdoor") tapRefDoor();
     else if (spot.indexOf("cab") === 0) tapCabinet(+spot.charAt(3) - 1);
     else tapDetail(spot === "unit" ? "aircon" : spot, b);   // the wall unit speaks for the aircon, the remote opens the panel
   }
@@ -899,6 +996,8 @@
     secret = { code: false, taken: false, slip: false, ring: false, key: false };
     cab = [false, false, false, false];
     catAwake = 0;
+    mugClean = false;
+    drops = 0;
     watch = null;
     litWindows = 0;
     parcelOpen = false;
@@ -926,7 +1025,7 @@
       if (e.target.classList.contains("bubble")) tapIcon(e, "finger");
     });
     $("wrap-close").addEventListener("click", closeParcel);
-    $("mini-close").addEventListener("click", closeMini);
+    $("mini-close").addEventListener("click", function () { closeMini(); draw(); });
     document.addEventListener("keydown", function (e) {
       if (e.key !== "Escape" || !active()) return;
       if (mini) { closeMini(); draw(); }
@@ -937,12 +1036,13 @@
       P.store.set(SOUND_KEY, soundOn ? "1" : "0");
       blip(600, 900, 80);
     });
-    // Touching anything other than the window ends the quiet count.
-    document.addEventListener("pointerdown", function (e) {
-      if (watch && !(e.target.closest && e.target.closest('[data-spot="window"]'))) stopWatch();
-    }, true);
-
-    document.addEventListener("pantry:enter", function () { reset(); load(); applyConditions(); greet(); draw(); });
+    document.addEventListener("pantry:enter", function () {
+      reset(); load(); applyConditions(); greet();
+      // a cat that knows the visitor looks up when they come in
+      if (P.home.catStage() && !still) catAwake = 14;
+      soundScene();
+      draw();
+    });
     document.addEventListener("pantry:close", function () { reset(); });
 
     applyConditions();
@@ -953,7 +1053,9 @@
       updateWatch();
       if (coffee.pour > 0) coffee.pour--;
       if (shake > 0) shake--;
+      if (drops > 0) drops--;
       tickMini();
+      soundScene();
       if (catAwake > 0) catAwake--;
       if (spark && --spark.n < 0) spark = null;
       var goal = coverUp ? -13 : 0;

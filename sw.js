@@ -5,7 +5,7 @@ var FILES = [
   "./",
   "css/pantry.css",
   "data/copy.js",
-  "js/conditions.js", "js/receipt.js", "js/break.js", "js/sound.js", "js/toys.js", "js/room.js",
+  "js/scale.js", "js/conditions.js", "js/receipt.js", "js/break.js", "js/sound.js", "js/toys.js", "js/room.js",
   "assets/sprites/room.png", "assets/sprites/door.png", "assets/sprites/sign.png",
   "assets/sprites/bubble.png", "assets/sprites/ref_items.png", "assets/sprites/exit.png",
   "assets/sprites/sound_on.png", "assets/sprites/sound_off.png",

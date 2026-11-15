@@ -118,6 +118,7 @@
   function frame(cls, cv) {
     var box = document.createElement("div");
     box.className = "toy " + cls;
+    box.dataset.cols = cv.width;     // art pixels across, so js/scale.js can size it to whole device pixels
     box.appendChild(cv);
     return box;
   }

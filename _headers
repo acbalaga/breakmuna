@@ -1,9 +1,11 @@
 # The sha256 in style-src is the inline style block of 404.html.
+# img-src blob: is the receipt image, which is drawn on the device.
 # connect-src is for sw.js, which fetches the site's own files to keep an offline copy.
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: DENY
-  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'sha256-BmUu7zIgF9A88ojZEqL/cXvOubVIdPcJAGUo2jS+SBo='; img-src 'self'; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'sha256-BmUu7zIgF9A88ojZEqL/cXvOubVIdPcJAGUo2jS+SBo='; img-src 'self' blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
   Cross-Origin-Opener-Policy: same-origin
+  Strict-Transport-Security: max-age=31536000

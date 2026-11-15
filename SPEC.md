@@ -60,6 +60,7 @@ The whole site is one pixel-art pantry in portrait orientation, drawn like a roo
 - Animation is frame-stepped in two to four frames: rain, coffee steam, the microwave glow, the clock hands.
 - Copy appears in an RPG dialog box at the bottom of the screen when an object is tapped.
 - Dialog text uses a clean monospace font for legibility on phones. A pixel font is used for the title only.
+- The title is not lettered on the wall. On the door screen the name is on the doormat, an object like everything else. The link preview image keeps the large title.
 - The break receipt is not pixel art. It stays crisp so it reads well as a shared image.
 
 **Pointer, in place of an avatar**
@@ -180,6 +181,7 @@ The receipt is the share object, so it is the one feature that cannot be cut. It
 **Export and share**
 
 - Rendered to a canvas and saved as a PNG at 1080 by 1350 pixels, the portrait ratio LinkedIn shows without cropping.
+- The slip on screen is an image of that PNG, not the canvas. Where an in-app browser has no share sheet and ignores downloads, press and hold on the receipt still saves it, and a line under the buttons says so.
 - On phones, the share button opens the native share sheet with the image attached. Where that is unsupported, it downloads the file.
 - A "copy caption" button gives one optional line of post text. No hashtags, no call to action.
 - The link preview uses a fixed image of the closed pantry door, since a static site cannot generate one per visitor.
@@ -207,7 +209,7 @@ The site is static files on a free static host, with no server, no database, no 
 | Motion | Honors the reduced-motion setting. No flashing beyond the single light flicker. |
 | Accessibility | Every station is a real button with a label. Receipt text is also available as text. |
 | Privacy | No cookies, no tracking scripts, no personal data collected |
-| Security | No third-party requests. A Content-Security-Policy allows same-origin scripts, styles, images, manifest and worker only, so no inline scripts or `style` attributes. Nothing read from storage or the URL is written as HTML. |
+| Security | No third-party requests. A Content-Security-Policy allows same-origin scripts, styles, images, manifest and worker only (plus `blob:` images, for the receipt drawn on the device), so no inline scripts or `style` attributes. Nothing read from storage or the URL is written as HTML. |
 | Analytics | Optional cookieless page counter only |
 | Hosting | Any static host with a custom domain and HTTPS |
 

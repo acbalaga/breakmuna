@@ -228,7 +228,7 @@ window.PANTRY_COPY = [
   // ---------------------------------------------------------------- extras, outside the 181
   // Landing line (open door).
   { id: "landing-01", pool: "landing", text: "Pantry open. Break limit: 5 minutes. Tap the door." },
-  { id: "landing-02", pool: "landing", when: ["weekend"], text: "Pantry open. It is the weekend. The pantry would like to know why you are here." },
+  { id: "landing-02", pool: "landing", when: ["weekend"], text: "It is the weekend. The pantry would like to know why you are here. Tap the door." },
 
   // Receipt line the visitor did not earn.
   { id: "unearned-01", pool: "unearned", label: "Meetings avoided", value: "1" },
@@ -303,7 +303,7 @@ window.PANTRY_COPY = [
   { id: "window-03", pool: "window", text: "Breathe out, the glass fogs. Whatever you draw is gone before the next meeting." },
   { id: "window-04", pool: "window", when: ["rainy_season"], text: "Rain on the glass. Breathe with it. The traffic below is not yours for five minutes." },
   { id: "window-05", pool: "window", when: ["overtime"], text: "The city at night. Breathe out, the glass fogs. Most of those lit windows are also on break." },
-  { id: "window-quiet", pool: "hint", text: "The sound is off. It can be turned on, bottom left." },
+  { id: "window-quiet", pool: "hint", text: "Sound is off, bottom left." },
 
   // The sill plant. One watering per break. The grow lines are said once each.
   { id: "plant-01", pool: "plant", text: "You water the sill plant. It is the only thing here with a growth plan." },

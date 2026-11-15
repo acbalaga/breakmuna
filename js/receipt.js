@@ -8,6 +8,8 @@
   var MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", "Courier New", monospace';
 
   var blob = null;     // PNG of the receipt on screen, ready before the share tap
+  var shown = "";      // address of that PNG while it is on screen
+  var canvas = null;   // drawn on, never shown: the slip on screen is an image of it
 
   function clock(ms) {
     return new Date(ms).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
@@ -163,10 +165,15 @@
     rule(y += 40);
 
     if (d.closing) {
-      ctx.font = "30px " + MONO;
-      var lines = wrap(ctx, d.closing, R - L - PAD * 2).slice(0, many ? 2 : 3);
+      // a long line gets smaller type, so it is never cut off mid-sentence
+      var room = many ? 2 : 3, size = 30, lines;
+      do {
+        ctx.font = size + "px " + MONO;
+        lines = wrap(ctx, d.closing, R - L - PAD * 2);
+      } while (lines.length > room && (size -= 2) >= 20);
+      lines = lines.slice(0, room);
       y += 14;
-      lines.forEach(function (l) { text(l, cx, y += 42, 30, { align: "center" }); });
+      lines.forEach(function (l) { text(l, cx, y += 42, size, { align: "center" }); });
       rule(y += 44);
     }
 
@@ -210,8 +217,14 @@
     try { return blob ? new File([blob], "break-muna-receipt.png", { type: "image/png" }) : null; } catch (e) { return null; }
   }
 
+  function coarse() {
+    try { return window.matchMedia("(pointer: coarse)").matches; } catch (e) { return false; }
+  }
+
   function download() {
     if (!blob) return;
+    // some in-app browsers ignore downloads, so say what else works
+    if (coarse()) $("receipt-hint").hidden = false;
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "break-muna-receipt.png";
@@ -253,16 +266,29 @@
   }
 
   // Draws the receipt into the overlay. break.js shows and hides the overlay.
+  // The slip on screen is an <img>, so where there is no share sheet and downloads are
+  // ignored (in-app browsers), press and hold still saves it.
   P.renderReceipt = function (r) {
-    var canvas = $("receipt-canvas"), shareBtn = $("receipt-share");
+    var img = $("receipt-img"), shareBtn = $("receipt-share"), hint = $("receipt-hint");
+    if (!canvas) {
+      canvas = document.createElement("canvas");
+      canvas.width = W; canvas.height = H;
+    }
     $("receipt-text").textContent = P.receiptText(r);
     drawReceipt(canvas, r);
     blob = null;
     shareBtn.textContent = "Save image";
+    hint.hidden = true;
     canvas.toBlob(function (b) {
       blob = b;
-      var f = file();
-      if (f && canShareFile(f)) shareBtn.textContent = "Share";
+      if (!b) return;
+      if (shown) URL.revokeObjectURL(shown);
+      shown = URL.createObjectURL(b);
+      img.src = shown;
+      var f = file(), sheet = !!(f && canShareFile(f));
+      if (sheet) shareBtn.textContent = "Share";
+      // touch screens without a share sheet: say that the image itself can be saved
+      hint.hidden = sheet || !coarse();
     }, "image/png");
   };
 

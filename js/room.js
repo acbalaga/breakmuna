@@ -946,6 +946,7 @@
     $("mini").setAttribute("aria-label", MINI[kind].label);
     MINI[kind].build(body);
     $("mini").hidden = false;
+    if (P.scale) P.scale.toys();
     draw();
   }
 

@@ -143,7 +143,7 @@ body[data-view="cooldown"] .sign { animation: sway 1.2s steps(1) 1; transform-or
 }
 
 /* The receipt prints from the top, a strip at a time. */
-.receipt:not([hidden]) .slip canvas { animation: print 0.9s steps(9) 1; }
+.receipt:not([hidden]) .slip img { animation: print 0.9s steps(9) 1; }
 @keyframes print {
   from { clip-path: inset(0 0 100% 0); }
   to { clip-path: inset(0 0 0 0); }
@@ -151,7 +151,7 @@ body[data-view="cooldown"] .sign { animation: sway 1.2s steps(1) 1; transform-or
 @media (prefers-reduced-motion: reduce) {
   body[data-view="landing"] .door-glow,
   body[data-view="cooldown"] .sign,
-  .receipt:not([hidden]) .slip canvas { animation: none; }
+  .receipt:not([hidden]) .slip img { animation: none; }
 }
 
 /* Wall clock hands, drawn on the art grid. */
@@ -235,13 +235,14 @@ body[data-view="cooldown"] .sign { animation: sway 1.2s steps(1) 1; transform-or
 .ctl.panel-close { min-height: 32px; padding: 2px 10px; cursor: pointer; }
 .wrap-grid {
   display: grid;
-  grid-template-columns: repeat(7, 40px);
+  /* 40 px bubbles, smaller when the room is narrower than the sheet */
+  grid-template-columns: repeat(7, minmax(0, 40px));
   justify-content: center;
   margin-top: 4px;
 }
 .bubble {
-  width: 40px;
-  height: 40px;
+  width: 100%;
+  aspect-ratio: 1;
   margin: 0;
   padding: 0;
   border: 0;
@@ -491,14 +492,19 @@ body[data-view="cooldown"] .sign { animation: sway 1.2s steps(1) 1; transform-or
 }
 .slip {
   width: 100%;
-  max-width: min(340px, calc((100dvh - 110px) * 0.8));
+  /* 170 px is two rows of buttons and the hint line, so they stay on a short screen */
+  max-width: min(340px, calc((100dvh - 170px) * 0.8));
   text-align: center;
 }
-.slip canvas {
+/* An image, not a canvas, so press and hold can save it where the share sheet is missing. */
+.slip img {
   display: block;
   width: 100%;
   height: auto;
+  -webkit-touch-callout: default;
+  user-select: auto;
 }
+.receipt-hint { margin: 8px 0 0; font-size: 13px; line-height: 1.4; color: var(--paper); }
 .receipt-actions {
   display: flex;
   flex-wrap: wrap;
@@ -519,7 +525,7 @@ body[data-view="cooldown"] .sign { animation: sway 1.2s steps(1) 1; transform-or
 /* RPG dialog box under the room. */
 .dialog {
   min-height: var(--dialog-h);
-  padding: 12px 14px;
+  padding: 10px 14px;
   background: var(--paper);
   border: 4px solid var(--ink);
   box-shadow: inset 0 0 0 2px #8c8c94;

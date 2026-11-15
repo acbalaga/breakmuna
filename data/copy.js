@@ -228,7 +228,7 @@ window.PANTRY_COPY = [
   // ---------------------------------------------------------------- extras, outside the 181
   // Landing line (open door).
   { id: "landing-01", pool: "landing", text: "Pantry open. Break limit: 5 minutes. Tap the door." },
-  { id: "landing-02", pool: "landing", when: ["weekend"], text: "Pantry open. It is the weekend. The pantry would like to know why you are here." },
+  { id: "landing-02", pool: "landing", when: ["weekend"], text: "It is the weekend. The pantry would like to know why you are here. Tap the door." },
 
   // Receipt line the visitor did not earn.
   { id: "unearned-01", pool: "unearned", label: "Meetings avoided", value: "1" },
@@ -303,7 +303,7 @@ window.PANTRY_COPY = [
   { id: "window-03", pool: "window", text: "Breathe out, the glass fogs. Whatever you draw is gone before the next meeting." },
   { id: "window-04", pool: "window", when: ["rainy_season"], text: "Rain on the glass. Breathe with it. The traffic below is not yours for five minutes." },
   { id: "window-05", pool: "window", when: ["overtime"], text: "The city at night. Breathe out, the glass fogs. Most of those lit windows are also on break." },
-  { id: "window-quiet", pool: "hint", text: "The sound is off. It can be turned on, bottom left." },
+  { id: "window-quiet", pool: "hint", text: "Sound is off, bottom left." },
 
   // The sill plant. One watering per break. The grow lines are said once each.
   { id: "plant-01", pool: "plant", text: "You water the sill plant. It is the only thing here with a growth plan." },
@@ -337,6 +337,17 @@ window.PANTRY_COPY = [
   { id: "magnet-straight", pool: "hint", text: "The magnets are aligned. This will last until lunch." },
   { id: "note-new", pool: "hint", text: "A fresh sticky note. It has about half its stick left." },
 
-  // Optional post caption for the copy button.
-  { id: "caption-01", pool: "caption", text: "Five minutes in the pantry. It is on record." }
+  // Optional post captions for the copy button. One is picked per press. No hashtags, no call to action.
+  { id: "caption-01", pool: "caption", text: "Five minutes in the pantry. It is on record." },
+  { id: "caption-02", pool: "caption", text: "Took a five minute break. There is paperwork." },
+  { id: "caption-03", pool: "caption", text: "Break taken. Receipt attached for audit purposes." },
+  { id: "caption-04", pool: "caption", text: "The pantry issued a receipt. I did not ask for one." },
+  { id: "caption-05", pool: "caption", text: "Stepped away from my desk for five minutes. Documentation attached." },
+  { id: "caption-06", pool: "caption", text: "For the record, I was in the pantry." },
+  { id: "caption-07", pool: "caption", text: "My break has been itemized." },
+  { id: "caption-08", pool: "caption", text: "Five minutes, one receipt, no approvals needed." },
+  { id: "caption-09", pool: "caption", text: "The pantry is closed to me for the next thirty minutes. I have been informed in writing." },
+  { id: "caption-10", pool: "caption", when: ["weekend"], text: "A pantry break on a weekend. The receipt does not explain it either." },
+  { id: "caption-11", pool: "caption", when: ["friday_close"], text: "Friday break, on record. Nothing further this week." },
+  { id: "caption-12", pool: "caption", when: ["monday_morning"], text: "Monday morning break. Filed before the first meeting." }
 ];

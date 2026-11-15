@@ -555,22 +555,48 @@ krrrrrrrrkwwnwk.
 """,
 }
 
-FAVICON = """
+# App icon: white mug, blue stripe, yellow steam on the room's ink color.
+# One 16 by 16 grid feeds the favicon, home screen and maskable icons.
+ICON_MUG = """
+......y..y......
+.....y..y.......
+......y..y......
 ................
-.....g..g.......
-....g..g........
-.....g..g.......
-................
-..kkkkkkkkk.....
-..kwwwwwwwkkk...
-..kwwwwwwwk.kk..
-..kbbbbbbbk..k..
-..kwwwwwwwk.kk..
-..kwwwwwwwkkk...
-..kwwwwwwwk.....
-..kkkkkkkkk.....
-................
+...wwwwwwwwww...
+...wwwwwwwwwwww.
+...wbbbbbbbbw.w.
+...wbbbbbbbbw.w.
+...wwwwwwwwwwww.
+...wwwwwwwwww...
+....wwwwwwww....
 """
+ICON_KEY = {".": 0, "w": 8, "b": 13, "y": 17}   # ink is index 0
+
+
+def icon_grid(art, pad_cells=0):
+    """The mug centred on an ink tile: 16 by 16 cells, plus pad_cells of ink on every side."""
+    rows = art.strip("\n").split("\n")
+    xs = [x for r in rows for x, ch in enumerate(r) if ch != "."]
+    ys = [y for y, r in enumerate(rows) if r.strip(".")]
+    ox = (16 - (max(xs) - min(xs) + 1)) // 2 - min(xs)
+    oy = (16 - (max(ys) - min(ys) + 1)) // 2 - min(ys)
+    n = 16 + 2 * pad_cells
+    grid = [[0] * n for _ in range(n)]
+    for y, r in enumerate(rows):
+        for x, ch in enumerate(r):
+            if ch != ".":
+                grid[y + oy + pad_cells][x + ox + pad_cells] = ICON_KEY[ch]
+    return grid
+
+
+def border(grid, scale, margin):
+    """Scale a grid up, then wrap it in margin pixels of ink so the size is exact (180 for iOS)."""
+    wide = [[v for v in row for _ in range(scale)] for row in grid for _ in range(scale)]
+    side = len(wide[0]) + 2 * margin
+    out = [[0] * side for _ in range(margin)]
+    out += [[0] * margin + row + [0] * margin for row in wide]
+    out += [[0] * side for _ in range(margin)]
+    return out
 
 BUBBLE = """
 ..dddd..........
@@ -599,12 +625,13 @@ if __name__ == "__main__":
         write_png(os.path.join(ROOT, f"assets/sprites/{name}.png"), cursor_grid(art), scale=2)
     write_png(os.path.join(ROOT, "assets/sprites/bubble.png"),
               [[KEY[ch] for ch in r.ljust(16, ".")] for r in BUBBLE.strip("\n").split("\n")])
-    write_png(os.path.join(ROOT, "assets/favicon.png"), cursor_grid(FAVICON), scale=2)
-    # home screen icons: the same mug on the wall color
-    icon = [[1 if v == CLEAR else v for v in row] for row in cursor_grid(FAVICON)]
-    icon = [icon[-1]] + icon[:-1]          # one row down, to sit in the middle
-    write_png(os.path.join(ROOT, "assets/icon-192.png"), icon, scale=12)
-    write_png(os.path.join(ROOT, "assets/icon-512.png"), icon, scale=32)
+    mug = icon_grid(ICON_MUG)
+    write_png(os.path.join(ROOT, "assets/favicon.png"), mug, scale=2)       # 32 px tab icon
+    write_png(os.path.join(ROOT, "assets/icon-192.png"), mug, scale=12)
+    write_png(os.path.join(ROOT, "assets/icon-512.png"), mug, scale=32)
+    write_png(os.path.join(ROOT, "assets/icon-180.png"), border(mug, 11, 2))  # iOS home screen, 176 + 2 margin
+    # Android adaptive icons crop to a circle: keep the mug inside the middle 80%.
+    write_png(os.path.join(ROOT, "assets/icon-maskable-520.png"), icon_grid(ICON_MUG, 2), scale=26)
     ref_items()
     write_png(os.path.join(ROOT, "assets/sprites/ref_items.png"), g)
     preview = os.environ.get("PREVIEW_DIR")

@@ -371,8 +371,7 @@ def room():
     R(67, 44, 86, 44, 10); R(67, 78, 86, 78, 10)
     R(67, 45, 86, 45, 0)
     R(69, 38, 69, 43, 11); R(69, 48, 69, 58, 11)
-    P(77, 34, 15); P(80, 36, 13)
-    R(75, 50, 80, 56, 17); R(76, 52, 79, 52, 20); R(76, 54, 78, 54, 20)
+    # the magnets and the sticky note on the door are drawn by js/room.js, since they move
 
     # loaf of bread on top of the ref
     box(69, 25, 82, 30, 7)
@@ -601,6 +600,11 @@ if __name__ == "__main__":
     write_png(os.path.join(ROOT, "assets/sprites/bubble.png"),
               [[KEY[ch] for ch in r.ljust(16, ".")] for r in BUBBLE.strip("\n").split("\n")])
     write_png(os.path.join(ROOT, "assets/favicon.png"), cursor_grid(FAVICON), scale=2)
+    # home screen icons: the same mug on the wall color
+    icon = [[1 if v == CLEAR else v for v in row] for row in cursor_grid(FAVICON)]
+    icon = [icon[-1]] + icon[:-1]          # one row down, to sit in the middle
+    write_png(os.path.join(ROOT, "assets/icon-192.png"), icon, scale=12)
+    write_png(os.path.join(ROOT, "assets/icon-512.png"), icon, scale=32)
     ref_items()
     write_png(os.path.join(ROOT, "assets/sprites/ref_items.png"), g)
     preview = os.environ.get("PREVIEW_DIR")

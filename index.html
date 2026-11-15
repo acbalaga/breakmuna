@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Break Muna</title>
 <meta name="description" content="A five minute break in an office pantry. Then the door closes for thirty.">
@@ -17,6 +17,11 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="stylesheet" href="css/pantry.css">
 </head>
 <body>
@@ -42,6 +47,7 @@
     <button type="button" class="spot station" data-spot="merienda" data-cursor="fork" aria-label="Merienda tray"></button>
     <button type="button" class="spot station" data-spot="parcel" data-cursor="finger" aria-label="Parcel pile"></button>
     <button type="button" class="spot station" data-spot="window" data-cursor="eyes" aria-label="The window"></button>
+    <button type="button" class="spot detail" data-spot="plant" aria-label="The plant on the windowsill"></button>
 
     <!-- Cabinets under the counter, and the building cat. -->
     <button type="button" class="spot detail" data-spot="cab1" aria-label="First cabinet"></button>
@@ -53,6 +59,7 @@
     <!-- Background details, one line each. -->
     <button type="button" class="spot detail" data-spot="microwave" aria-label="Microwave"></button>
     <button type="button" class="spot detail" data-spot="ref" aria-label="Ref"></button>
+    <button type="button" class="spot detail" data-spot="refdoor" aria-label="Ref door: magnets and a sticky note"></button>
     <button type="button" class="spot detail" data-spot="aircon" aria-label="Aircon remote"></button>
     <button type="button" class="spot detail" data-spot="unit" aria-label="Aircon"></button>
     <button type="button" class="spot detail" data-spot="bulletin" aria-label="Bulletin board"></button>
@@ -98,6 +105,8 @@
 <script src="js/conditions.js"></script>
 <script src="js/receipt.js"></script>
 <script src="js/break.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/toys.js"></script>
 <script src="js/room.js"></script>
 </body>
 </html>

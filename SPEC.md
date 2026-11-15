@@ -29,12 +29,20 @@ The whole site is one pixel-art pantry in portrait orientation, drawn like a roo
 
 | Spot | What you do | What it gives back | Receipt line |
 | --- | --- | --- | --- |
-| Coffee corner | Tap the 3-in-1 sachet, fill from the water dispenser, stir | A cup that steams, plus one dry pantry notice per cup | Cups of coffee |
+| Coffee corner | Tap the 3-in-1 sachet, fill from the water dispenser, then stir the cup from above by dragging in circles | A cup that steams, plus one dry pantry notice per cup | Cups of coffee |
+| The sink | Tap the mug when it is empty or finished. Scrub the coffee off, then rinse the soap off. | A clean mug, for now | Mugs washed |
 | Merienda tray | Lift the cover to see today's merienda (changes daily, same for everyone that day) | The item, with a one-line note attached | Merienda of the day |
 | Parcel pile | Open a parcel left at reception, pop the bubble wrap | Popping, with sound if enabled | Bubbles popped |
-| The window | Do nothing. Rain, a stalled EDSA, lights coming on. | A quiet counter of seconds spent not touching anything | Seconds at the window |
+| The window | Nothing is required. A pacer runs four seconds in, six out. Each breath out fogs the glass, and a finger draws in the fog. Rain, a stalled EDSA, lights coming on. | A quiet count of seconds spent at the window, and of full breaths | Seconds at the window, Slow breaths |
 
 **Background details, not stations.** These are tappable for one line each and make the room feel inhabited: the microwave queue, the ref with someone's forgotten baon, the aircon and its remote, the bulletin board, the cabinets under the counter, the building cat, and the wall clock. The clock hands show the real time. Its rim fills red, clockwise from 12, as the break runs out.
+
+**What the room remembers.** Four things carry over from one break to the next, so the room becomes the visitor's own. None of them keeps a date, so there is no streak and nothing is lost by staying away.
+
+- The building cat warms up by one step for each break it is petted in. At two it looks up when the visitor comes in and purrs. At five it joins them on the windowsill.
+- The sill plant takes one watering per break and grows by total waterings (3, 7, 14, 30). It never shrinks.
+- The magnets on the ref door stay where they were dragged.
+- The sticky note on the ref door keeps whatever was drawn on it.
 
 **Mini panels and hidden cases.** The aircon remote, ref, bulletin board and microwave each open a small panel with one thing to do. Two hidden cases run through them (the October baon, the supply cabinet). Solving one stamps the receipt in place of the barcode. Neither is announced, scored, or required.
 
@@ -43,6 +51,8 @@ The whole site is one pixel-art pantry in portrait orientation, drawn like a roo
 - Nothing can be failed or lost. A break toy with a fail state is work.
 - Each station is complete in 60 to 90 seconds, so three stations and the window fit in five minutes.
 - The wall clock is the only timer on screen. There is no digital countdown.
+- Every hands-on panel has a button that does the same job as the drag, so nothing needs a steady finger.
+- The window never shows snow. Rain is drawn as long blue streaks so it cannot be mistaken for it.
 
 **Pixel style**
 
@@ -161,10 +171,11 @@ The receipt is the share object, so it is the one feature that cannot be cut. It
 1. Site name and "Official Break Receipt"
 2. Date, time in, time out, duration
 3. Line items from the stations: cups of coffee, merienda of the day, bubbles popped, seconds at the window
-4. One line item the visitor did not earn, drawn from the day's conditions (for example "Meetings avoided: 1")
-5. One closing line from the receipt pool
-6. "Pantry reopens at 3:42 PM"
-7. Site URL
+4. Lines that print only when they happened: slow breaths, mugs washed, sill plant watered, the cat's assessment
+5. One line item the visitor did not earn, drawn from the day's conditions (for example "Meetings avoided: 1")
+6. One closing line from the receipt pool
+7. "Pantry reopens at 3:42 PM"
+8. Site URL
 
 **Export and share**
 
@@ -188,14 +199,15 @@ The site is static files on a free static host, with no server, no database, no 
 | Stack | Plain HTML, CSS and JavaScript. No framework. |
 | Scene | Pixel-art sprite sheets (PNG) scaled up with pixelated rendering, animated in stepped frames |
 | Copy | One data file, lines tagged by station and condition |
-| State | Local storage: break start, break end, session counts, last receipt |
-| Sound | Web Audio, off by default, one visible toggle |
+| State | Local storage: break start, break end, session counts, last receipt, and what the room remembers |
+| Sound | Web Audio, off by default, one visible toggle. Taps and dings, plus a room ambience: aircon hum, rain when it rains, the city, the microwave, the cat. All synthesized, no audio files. At the window the outside comes forward. |
+| Install | A web manifest and a small service worker, so the site can sit on a phone's home screen and open without a signal. Network first, so a deploy needs no version bump. No notifications. |
 | Page weight | Under 500 KB total, usable on mobile data |
 | Layout | Mobile-first portrait from 360 px wide. Desktop shows the same room centered. |
 | Motion | Honors the reduced-motion setting. No flashing beyond the single light flicker. |
 | Accessibility | Every station is a real button with a label. Receipt text is also available as text. |
 | Privacy | No cookies, no tracking scripts, no personal data collected |
-| Security | No third-party requests. A Content-Security-Policy allows same-origin scripts, styles and images only, so no inline scripts or `style` attributes. Nothing read from storage or the URL is written as HTML. |
+| Security | No third-party requests. A Content-Security-Policy allows same-origin scripts, styles, images, manifest and worker only, so no inline scripts or `style` attributes. Nothing read from storage or the URL is written as HTML. |
 | Analytics | Optional cookieless page counter only |
 | Hosting | Any static host with a custom domain and HTTPS |
 
@@ -260,6 +272,10 @@ index.html          the single page
 css/pantry.css      layout, pixel rendering, dialog box, receipt
 js/break.js         door, timer, close, cooldown, storage
 js/room.js          stations, background objects, cursor, tap icons
+js/toys.js          what the room remembers, and the window, sink, stirring and ref door panels
+js/sound.js         ambience and effects, synthesized
+sw.js               offline copy of the site
+manifest.webmanifest  home screen name, colors and icons
 js/conditions.js    day, hour and season logic, debug override
 js/receipt.js       receipt layout, PNG export, share and download
 data/copy.js        every line of copy, tagged
@@ -290,14 +306,14 @@ Each line is one object: `id`, `pool` (coffee, merienda, parcel, background, con
 
 **Storage keys**
 
-`pantry.breakStart`, `pantry.breakEnd`, `pantry.counts`, `pantry.lastReceipt`, `pantry.sound`. All reads and writes are wrapped so the site still works when storage is blocked.
+`pantry.breakStart`, `pantry.breakEnd`, `pantry.counts`, `pantry.lastReceipt`, `pantry.sound`, and `pantry.home` (cat and plant counts, magnet positions, the sticky note), which is the only key that outlives a break. All reads and writes are wrapped so the site still works when storage is blocked.
 
 **Working rules for the agent**
 
 1. Build in the order of the weekend build plan. Do not start the scene before the 30-line voice sample is approved.
 2. No frameworks, no build step, no package dependencies. Plain files that open from a static host.
 3. Do not write copy that breaks the voice rules or the banned list. When unsure, write fewer lines.
-4. Do not add features that are not in this spec. Scores, accounts, leaderboards and streaks are out of scope.
+4. Do not add features that are not in this spec. Scores, accounts, leaderboards, streaks and notifications are out of scope. What the room remembers counts visits, never consecutive days.
 5. Check each step on a 360 px wide viewport before moving to the next.
 6. Use the debug override to verify every time condition instead of waiting for the clock.
 7. Tick the acceptance checks in this document only after testing them.
